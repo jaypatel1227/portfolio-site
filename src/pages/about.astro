@@ -8,13 +8,15 @@ const description =
 
 <Base title="About" description={description}>
   <section class="about">
-    <p class="eyebrow">about</p>
-    <h1>{site.name.toLowerCase()}</h1>
-    <p class="lede">{site.jobTitle.toLowerCase()}</p>
-    <p>
-      {site.bio.toLowerCase()}
-      <a href={xSocial.url} rel="me noopener noreferrer">reach out on x!</a>
-    </p>
+    <div class="about-intro">
+      <p class="eyebrow">about</p>
+      <h1>{site.name.toLowerCase()}</h1>
+      <p class="lede">{site.jobTitle.toLowerCase()}</p>
+      <p>
+        {site.bio.toLowerCase()}
+        <a href={xSocial.url} rel="me noopener noreferrer">reach out on x!</a>
+      </p>
+    </div>
 
     <dl class="facts">
       <div>

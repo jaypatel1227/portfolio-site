@@ -22,9 +22,11 @@ const posts = Object.values(
 
 <Base title="Blog" description={description}>
   <section class="blog">
-    <p class="eyebrow">writing</p>
-    <h1>blog</h1>
-    <p class="lede">short notes, public learning, occasional opinions.</p>
+    <div class="blog-intro">
+      <p class="eyebrow">writing</p>
+      <h1>blog</h1>
+      <p class="lede">short notes, public learning, occasional opinions.</p>
+    </div>
 
     {
       posts.length === 0 ? (

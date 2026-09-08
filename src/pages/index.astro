@@ -1,19 +1,66 @@
 ---
 import Base from "../layouts/Base.astro";
-import { site, xSocial } from "../data/site";
+import { formatDate, site, xSocial, type PostFrontmatter } from "../data/site";
+
+const latestPost = Object.values(
+  import.meta.glob<{ frontmatter: PostFrontmatter; url?: string }>(
+    "./posts/*.{md,mdx}",
+    { eager: true },
+  ),
+)
+  .filter((post) => post.url)
+  .sort((a, b) => {
+    return (
+      new Date(b.frontmatter.pubDate).getTime() -
+      new Date(a.frontmatter.pubDate).getTime()
+    );
+  })[0];
 ---
 
 <Base>
   <section class="home">
-    <p class="eyebrow">hello, folks</p>
-    <h1>{site.name.toLowerCase()}</h1>
-    <p class="lede">{site.jobTitle.toLowerCase()}</p>
-    <p>
-      i work at <a href={site.employer.url} rel="noopener noreferrer">{site.employer.name.toLowerCase()}</a> in {site.location.city.toLowerCase()} / {site.location.region.toLowerCase()}.
-    </p>
-    <p>
-      {site.availability}
-      <a href={xSocial.url} rel="me noopener noreferrer">reach out on x!</a>
-    </p>
+    <div class="home-intro">
+      <p class="eyebrow">hello, folks</p>
+      <h1>{site.name.toLowerCase()}</h1>
+      <p class="lede">{site.jobTitle.toLowerCase()}</p>
+      <p>
+        i work at <a href={site.employer.url} rel="noopener noreferrer">{site.employer.name.toLowerCase()}</a> in {site.location.city.toLowerCase()} / {site.location.region.toLowerCase()}.
+      </p>
+      <p>
+        {site.availability}
+        <a href={xSocial.url} rel="me noopener noreferrer">reach out on x!</a>
+      </p>
+    </div>
+
+    <aside class="home-now" aria-label="now">
+      <p class="eyebrow">now</p>
+      <dl class="facts">
+        <div>
+          <dt>where</dt>
+          <dd>{site.location.city.toLowerCase()} / {site.location.region.toLowerCase()}</dd>
+        </div>
+        <div>
+          <dt>day job</dt>
+          <dd>
+            <a href={site.employer.url} rel="noopener noreferrer">
+              {site.employer.name.toLowerCase()}
+            </a>
+          </dd>
+        </div>
+        {
+          latestPost && (
+            <div>
+              <dt>writing</dt>
+              <dd>
+                <a href={latestPost.url}>{latestPost.frontmatter.title.toLowerCase()}</a>
+                <time datetime={new Date(latestPost.frontmatter.pubDate).toISOString()}>
+                  {formatDate(latestPost.frontmatter.pubDate)}
+                </time>
+              </dd>
+            </div>
+          )
+        }
+      </dl>
+    </aside>
   </section>
 </Base>
