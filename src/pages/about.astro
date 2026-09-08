@@ -1,0 +1,60 @@
+---
+import Base from "../layouts/Base.astro";
+import { site, xSocial } from "../data/site";
+
+const description =
+  "Jay Patel is a software developer and team lead at Epic Systems in Madison, Wisconsin. Always happy to talk AI or tech.";
+---
+
+<Base title="About" description={description}>
+  <section class="about">
+    <p class="eyebrow">about</p>
+    <h1>{site.name.toLowerCase()}</h1>
+    <p class="lede">{site.jobTitle.toLowerCase()}</p>
+    <p>
+      {site.bio.toLowerCase()}
+      <a href={xSocial.url} rel="me noopener noreferrer">reach out on x!</a>
+    </p>
+
+    <dl class="facts">
+      <div>
+        <dt>where</dt>
+        <dd>{site.location.city.toLowerCase()} / {site.location.region.toLowerCase()}</dd>
+      </div>
+      <div>
+        <dt>day job</dt>
+        <dd>
+          <a
+            class="employer"
+            href={site.employer.url}
+            rel="noopener noreferrer"
+            aria-label={site.employer.name.toLowerCase()}
+          >
+            <img
+              src={site.employer.logo}
+              alt=""
+              width="106"
+              height="41"
+            />
+          </a>
+        </dd>
+      </div>
+      <div>
+        <dt>email</dt>
+        <dd><a href={`mailto:${site.email}`}>{site.email}</a></dd>
+      </div>
+      <div>
+        <dt>elsewhere</dt>
+        <dd class="elsewhere">
+          {
+            site.socials.map((social) => (
+              <a href={social.url} rel="me noopener noreferrer" target="_blank">
+                {social.label}
+              </a>
+            ))
+          }
+        </dd>
+      </div>
+    </dl>
+  </section>
+</Base>

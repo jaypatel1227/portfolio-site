@@ -1,1 +1,233 @@
 @import "tailwindcss";
+
+@font-face {
+  font-family: "Jay";
+  src: url("/Jay.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@theme {
+  --font-hand: "Jay", cursive;
+  --color-ink: #f4efe6;
+  --color-muted: #c4b8a8;
+  --color-paper: #14110e;
+  --color-line: #3a342c;
+}
+
+html {
+  font-family: var(--font-hand);
+  color-scheme: dark;
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  /* the display font only ships lowercase glyphs */
+  text-transform: lowercase;
+}
+
+a {
+  color: inherit;
+  text-underline-offset: 0.18em;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -3rem;
+  background: var(--color-ink);
+  color: var(--color-paper);
+  padding: 0.4rem 0.7rem;
+}
+
+.skip-link:focus {
+  top: 1rem;
+}
+
+.site-header,
+.site-footer,
+.site-main {
+  width: min(42rem, calc(100% - 2.5rem));
+  margin-inline: auto;
+}
+
+.site-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding-block: 1.75rem 1.25rem;
+}
+
+.site-header nav {
+  display: flex;
+  gap: 1rem;
+}
+
+.site-header a[aria-current="page"] {
+  text-decoration: underline;
+}
+
+.wordmark {
+  letter-spacing: 0.02em;
+}
+
+.site-main {
+  flex: 1;
+  padding-bottom: 4rem;
+}
+
+.site-footer {
+  padding-block: 2rem 2.5rem;
+  border-top: 1px solid var(--color-line);
+  color: var(--color-muted);
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem 1.1rem;
+  margin: 0 0 0.75rem;
+}
+
+.footer-copy {
+  margin: 0;
+}
+
+.eyebrow {
+  color: var(--color-muted);
+  margin: 0 0 0.4rem;
+}
+
+h1 {
+  font-size: clamp(2.4rem, 7vw, 4rem);
+  line-height: 1.05;
+  font-weight: 400;
+  margin: 0 0 0.6rem;
+}
+
+.lede {
+  font-size: 1.25rem;
+  color: var(--color-muted);
+  margin: 0 0 1.25rem;
+}
+
+.home p,
+.about p {
+  max-width: 36rem;
+  font-size: 1.15rem;
+  line-height: 1.55;
+}
+
+.home p a,
+.about p a {
+  text-decoration: underline;
+}
+
+.home-links {
+  display: flex;
+  gap: 1.1rem;
+  margin-top: 1.75rem;
+}
+
+.facts {
+  display: grid;
+  gap: 1.25rem;
+  margin: 2.25rem 0 0;
+}
+
+.facts dt {
+  color: var(--color-muted);
+  margin-bottom: 0.25rem;
+}
+
+.facts dd {
+  margin: 0;
+}
+
+.employer {
+  display: inline-block;
+  line-height: 0;
+}
+
+.employer img {
+  height: 1.7rem;
+  width: auto;
+}
+
+.elsewhere {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem 1.1rem;
+}
+
+.post-list {
+  list-style: none;
+  padding: 0;
+  margin: 2rem 0 0;
+  display: grid;
+  gap: 1.5rem;
+}
+
+.post-list a {
+  display: block;
+  text-decoration: none;
+}
+
+.post-list h2 {
+  font-size: 1.45rem;
+  font-weight: 400;
+  margin: 0 0 0.35rem;
+}
+
+.post-list p {
+  margin: 0 0 0.35rem;
+  color: var(--color-muted);
+}
+
+.post-list time {
+  color: var(--color-muted);
+}
+
+.post-list a:hover h2 {
+  text-decoration: underline;
+}
+
+.post-header {
+  margin-bottom: 2rem;
+}
+
+.post-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.6rem;
+  color: var(--color-muted);
+  margin: 0;
+}
+
+.prose {
+  font-size: 1.12rem;
+  line-height: 1.6;
+}
+
+.prose > :first-child {
+  margin-top: 0;
+}
+
+.prose a {
+  text-decoration: underline;
+}
+
+.prose h2,
+.prose h3 {
+  font-weight: 400;
+  margin: 2rem 0 0.6rem;
+}

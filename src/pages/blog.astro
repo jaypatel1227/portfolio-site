@@ -1,0 +1,49 @@
+---
+import Base from "../layouts/Base.astro";
+import { formatDate, type PostFrontmatter } from "../data/site";
+
+const description =
+  "Notes from Jay Patel - software, AI, and whatever I'm figuring out in public.";
+
+const posts = Object.values(
+  import.meta.glob<{ frontmatter: PostFrontmatter; url?: string }>(
+    "./posts/*.{md,mdx}",
+    { eager: true },
+  ),
+)
+  .filter((post) => post.url)
+  .sort((a, b) => {
+    return (
+      new Date(b.frontmatter.pubDate).getTime() -
+      new Date(a.frontmatter.pubDate).getTime()
+    );
+  });
+---
+
+<Base title="Blog" description={description}>
+  <section class="blog">
+    <p class="eyebrow">writing</p>
+    <h1>blog</h1>
+    <p class="lede">short notes, public learning, occasional opinions.</p>
+
+    {
+      posts.length === 0 ? (
+        <p>nothing here yet. the rss feed might work though.</p>
+      ) : (
+        <ol class="post-list">
+          {posts.map((post) => (
+            <li>
+              <a href={post.url}>
+                <h2>{post.frontmatter.title.toLowerCase()}</h2>
+                <p>{post.frontmatter.description.toLowerCase()}</p>
+                <time datetime={new Date(post.frontmatter.pubDate).toISOString()}>
+                  {formatDate(post.frontmatter.pubDate)}
+                </time>
+              </a>
+            </li>
+          ))}
+        </ol>
+      )
+    }
+  </section>
+</Base>

@@ -1,25 +1,19 @@
 ---
-import "../styles/global.css";
+import Base from "../layouts/Base.astro";
+import { site, xSocial } from "../data/site";
 ---
 
-<html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-        <meta name="viewport" content="width=device-width" />
-        <meta name="generator" content={Astro.generator} />
-        <title>Jay</title>
-    </head>
-    <body>
-        <a href="">home</a>
-        <a href="blog">blog</a>
-        <a href="about">about</a>
-        <div class="h-100 w-100 bg-red-300">here is my site</div>
-        <div
-            class="h-100 w-100 bg-amber-700"
-            onclick='window.location = "www.google.com/"'
-        >
-            here is how to learn more about me
-        </div>
-    </body>
-</html>
+<Base>
+  <section class="home">
+    <p class="eyebrow">hello, folks</p>
+    <h1>{site.name.toLowerCase()}</h1>
+    <p class="lede">{site.jobTitle.toLowerCase()}</p>
+    <p>
+      i work at <a href={site.employer.url} rel="noopener noreferrer">{site.employer.name.toLowerCase()}</a> in {site.location.city.toLowerCase()} / {site.location.region.toLowerCase()}.
+    </p>
+    <p>
+      {site.availability}
+      <a href={xSocial.url} rel="me noopener noreferrer">reach out on x!</a>
+    </p>
+  </section>
+</Base>

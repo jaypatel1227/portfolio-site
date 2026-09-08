@@ -1,0 +1,75 @@
+---
+import Base from "./Base.astro";
+import {
+  absUrl,
+  blogPostingJsonLd,
+  formatDate,
+  site,
+  type PostFrontmatter,
+} from "../data/site";
+
+type Props = {
+  frontmatter: PostFrontmatter;
+};
+
+const { frontmatter } = Astro.props;
+const canonical = new URL(Astro.url.pathname, site.url).href;
+const author = frontmatter.author ?? site.author;
+const published = frontmatter.pubDate;
+const updated = frontmatter.updatedDate;
+const tags = frontmatter.tags ?? [];
+const image = frontmatter.image
+  ? { url: frontmatter.image.url, alt: frontmatter.image.alt }
+  : null;
+
+const jsonLd = [
+  blogPostingJsonLd({
+    title: frontmatter.title,
+    description: frontmatter.description,
+    canonical,
+    pubDate: published,
+    updatedDate: updated,
+    tags,
+    imageUrl: image ? absUrl(image.url) : undefined,
+  }),
+];
+---
+
+<Base
+  title={frontmatter.title}
+  description={frontmatter.description}
+  ogType="article"
+  image={image}
+  publishedTime={published}
+  modifiedTime={updated ?? published}
+  jsonLd={jsonLd}
+>
+  <article class="post">
+    <header class="post-header">
+      <p class="eyebrow">
+        <a href="/blog">blog</a>
+      </p>
+      <h1>{frontmatter.title.toLowerCase()}</h1>
+      <p class="post-meta">
+        <span>{author.toLowerCase()}</span>
+        <span aria-hidden="true">·</span>
+        <time datetime={new Date(published).toISOString()}>
+          {formatDate(published)}
+        </time>
+        {
+          updated && (
+            <>
+              <span aria-hidden="true">·</span>
+              <span>
+                updated <time datetime={new Date(updated).toISOString()}>{formatDate(updated)}</time>
+              </span>
+            </>
+          )
+        }
+      </p>
+    </header>
+    <div class="prose">
+      <slot />
+    </div>
+  </article>
+</Base>
