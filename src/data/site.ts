@@ -144,9 +144,7 @@ export function blogPostingJsonLd(input: {
     mainEntityOfPage: input.canonical,
     inLanguage: site.language,
     ...(input.imageUrl ? { image: input.imageUrl } : {}),
-    ...(input.tags && input.tags.length > 0
-      ? { keywords: input.tags.join(", ") }
-      : {}),
+    ...(input.tags && input.tags.length > 0 ? { keywords: input.tags.join(", ") } : {}),
   };
 }
 
