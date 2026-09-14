@@ -24,23 +24,37 @@ html {
   color: var(--color-ink);
 }
 
-/* scale the whole rem-based layout up on large desktop / 2k / 4k screens
-   so the site feels "zoomed in" instead of tiny and lost in whitespace. */
-@media (min-width: 96rem) {
+/* fluid "zoom" for large desktop / 2k / 4k screens.
+   measured before: 2560px viewport -> 20px root / 125px h1 / 1760px shell;
+   3840px viewport -> 22px root / 137px h1 / 1936px shell (only ~50% of width).
+   target now: noticeably larger at every step, shell tracks viewport. */
+@media (min-width: 90rem) {
   html {
-    font-size: 112.5%;
+    font-size: 118.75%;
+  }
+}
+
+@media (min-width: 110rem) {
+  html {
+    font-size: 137.5%;
   }
 }
 
 @media (min-width: 135rem) {
   html {
-    font-size: 125%;
+    font-size: 156.25%;
   }
 }
 
-@media (min-width: 170rem) {
+@media (min-width: 160rem) {
   html {
-    font-size: 137.5%;
+    font-size: 175%;
+  }
+}
+
+@media (min-width: 190rem) {
+  html {
+    font-size: 200%;
   }
 }
 
@@ -48,13 +62,19 @@ html {
   --shell-max: 72rem;
 }
 
-@media (min-width: 96rem) {
+@media (min-width: 90rem) {
   :root {
-    --shell-max: 80rem;
+    --shell-max: 78rem;
   }
 }
 
 @media (min-width: 135rem) {
+  :root {
+    --shell-max: 84rem;
+  }
+}
+
+@media (min-width: 190rem) {
   :root {
     --shell-max: 88rem;
   }
