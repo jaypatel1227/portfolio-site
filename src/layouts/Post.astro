@@ -52,14 +52,14 @@ const jsonLd = [
       <h1>{frontmatter.title.toLowerCase()}</h1>
       <p class="post-meta">
         <span>{author.toLowerCase()}</span>
-        <span aria-hidden="true">·</span>
+        <span aria-hidden="true">/</span>
         <time datetime={new Date(published).toISOString()}>
           {formatDate(published)}
         </time>
         {
           updated && (
             <>
-              <span aria-hidden="true">·</span>
+              <span aria-hidden="true">/</span>
               <span>
                 updated <time datetime={new Date(updated).toISOString()}>{formatDate(updated)}</time>
               </span>
