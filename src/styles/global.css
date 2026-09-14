@@ -17,10 +17,47 @@
 }
 
 html {
+  font-size: 100%;
   font-family: var(--font-hand);
   color-scheme: dark;
   background: var(--color-paper);
   color: var(--color-ink);
+}
+
+/* scale the whole rem-based layout up on large desktop / 2k / 4k screens
+   so the site feels "zoomed in" instead of tiny and lost in whitespace. */
+@media (min-width: 96rem) {
+  html {
+    font-size: 112.5%;
+  }
+}
+
+@media (min-width: 135rem) {
+  html {
+    font-size: 125%;
+  }
+}
+
+@media (min-width: 170rem) {
+  html {
+    font-size: 137.5%;
+  }
+}
+
+:root {
+  --shell-max: 72rem;
+}
+
+@media (min-width: 96rem) {
+  :root {
+    --shell-max: 80rem;
+  }
+}
+
+@media (min-width: 135rem) {
+  :root {
+    --shell-max: 88rem;
+  }
 }
 
 body {
@@ -56,6 +93,8 @@ a:hover {
 .site-footer,
 .site-main {
   width: 100%;
+  max-width: var(--shell-max);
+  margin-inline: auto;
   padding-inline: 1.25rem;
 }
 
@@ -108,7 +147,17 @@ a:hover {
 
 .site-main {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
   padding-bottom: 4rem;
+}
+
+/* vertically center the short home hero on tall / big screens
+   so it doesn't hug the header with a huge void underneath. */
+.home {
+  margin-block: auto;
+  padding-block: 2.5rem;
 }
 
 .site-footer {
