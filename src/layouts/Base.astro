@@ -1,11 +1,16 @@
 ---
 import "../styles/global.css";
+import FinalGlade from "../components/art/FinalGlade.astro";
+import Filament from "../components/art/Filament.astro";
 import {
   absUrl,
   jsonLdGraph,
   site,
   type SeoImage,
 } from "../data/site";
+
+/** filament is the house study on smaller screens; final is the commanded one */
+export type AmbientKind = "filament" | "final";
 
 interface Props {
   title?: string;
@@ -15,6 +20,7 @@ interface Props {
   publishedTime?: Date | string;
   modifiedTime?: Date | string;
   jsonLd?: Record<string, unknown>[];
+  ambient?: AmbientKind;
 }
 
 const {
@@ -25,6 +31,7 @@ const {
   publishedTime,
   modifiedTime,
   jsonLd = [],
+  ambient = "filament",
 } = Astro.props;
 
 const canonical = new URL(Astro.url.pathname, site.url).href;
@@ -100,7 +107,14 @@ const nav = [
 
     <script type="application/ld+json" set:html={JSON.stringify(schema)} />
   </head>
-  <body class="font-hand min-h-dvh flex flex-col">
+  <body class={`font-hand min-h-dvh flex flex-col ${ambient === "final" ? "glade-page" : ""}`}>
+    {ambient === "filament" && <Filament />}
+    {ambient === "final" && (
+      <>
+        <Filament />
+        <FinalGlade />
+      </>
+    )}
     <a class="skip-link" href="#content">skip to the good part</a>
     <header class="site-header">
       <a class="wordmark" href="/">{site.siteName}</a>

@@ -1,0 +1,22 @@
+---
+/**
+ * "Kiln Filament" — domain-warped ridged fbm, thin kiln-light threads.
+ * See src/lib/art/filament.ts.
+ */
+import AmbientShell from "./AmbientShell.astro";
+---
+
+<AmbientShell>
+  <canvas class="filament-canvas"></canvas>
+</AmbientShell>
+
+<script>
+  import { bootFilament } from "../../lib/art/filament";
+
+  const boot = (): void => {
+    document.querySelectorAll<HTMLCanvasElement>("canvas.filament-canvas").forEach(bootFilament);
+  };
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+  else requestAnimationFrame(boot);
+</script>
