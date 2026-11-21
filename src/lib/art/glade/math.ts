@@ -1,8 +1,4 @@
-/**
- * Shared math, seeded noise and world constants for the dark glade.
- */
-import * as THREE from "three";
-
+/** Shared math and seeded noise. */
 export const TAU = Math.PI * 2;
 
 export const clamp = (v: number, lo: number, hi: number): number =>
@@ -20,6 +16,15 @@ export function mulberry32(a: number): () => number {
     let t = Math.imul(a ^ (a >>> 15), 1 | a);
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** a second, cheaper generator; the canvas painters that use it depend on its exact sequence */
+export function lcg(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a = (a * 1664525 + 1013904223) >>> 0;
+    return a / 4294967296;
   };
 }
 
@@ -68,21 +73,6 @@ export function makeNoise(seed: number): Noise2 {
   };
 }
 
-export interface Collision {
-  x: number;
-  z: number;
-  r: number;
-}
-
-export const HOME_POS = new THREE.Vector3(0, 1.7, 26.5);
-export const TREE_POS = new THREE.Vector3(10.5, 0, -2);
-export const TREE_LOOK = new THREE.Vector3(TREE_POS.x, 4.9, TREE_POS.z);
-export const BOUND_RADIUS = 74;
-export const TREE_FIELD_RADIUS = 126;
-export const PLAYER_HEIGHT = 1.7;
-export const WALK_SPEED = 4.2;
-export const HURRY_SPEED = 7.0;
-
 export function pointToSegmentDist2(
   px: number,
   pz: number,
@@ -98,32 +88,6 @@ export function pointToSegmentDist2(
   const dx = px - (ax + abx * t);
   const dz = pz - (az + abz * t);
   return dx * dx + dz * dz;
-}
-
-export function pathDistance(x: number, z: number): number {
-  // the trail bends a little on its way to the tree
-  const bend = (Math.sin((z - HOME_POS.z) * 0.085) - Math.sin(0)) * 1.9;
-  return Math.sqrt(
-    pointToSegmentDist2(x + bend, z, HOME_POS.x, HOME_POS.z, TREE_POS.x, TREE_POS.z)
-  );
-}
-
-/** displaced-ground height, shared by the mesh, tree planting, flora and player */
-export function makeGroundHeight(seed: number): (x: number, z: number) => number {
-  const broad = makeNoise(seed ^ 0x1e37);
-  const detail = makeNoise(seed ^ 0x7a11);
-  return (x, z) => {
-    const r = Math.hypot(x, z);
-    const path = pathDistance(x, z);
-    const clearing = smoothstep(7, 30, r);
-    const bowl = smoothstep(22, 88, r);
-    const hills =
-      broad(x * 0.026, z * 0.026) * 5.6 +
-      detail(x * 0.075 + 40, z * 0.075 + 40) * 1.5 +
-      broad(x * 0.011 + 17, z * 0.011 + 17) * 9.0 * bowl;
-    const flatten = 1 - Math.exp(-(path * path) / 26);
-    return hills * clamp(clearing * 0.55 + bowl * 0.85, 0, 1) * flatten - 0.02;
-  };
 }
 
 export const easeInOutCubic = (t: number): number =>

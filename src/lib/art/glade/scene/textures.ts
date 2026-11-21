@@ -4,7 +4,7 @@
  * canvas at boot so the piece ships with zero image assets.
  */
 import * as THREE from "three";
-import { clamp, lerp, makeNoise, mulberry32, smoothstep, TAU } from "./glade-util";
+import { TAU, clamp, smoothstep, mulberry32, makeNoise } from "../math";
 
 function canvas2d(w: number, h: number): [HTMLCanvasElement, CanvasRenderingContext2D] {
   const canvas = document.createElement("canvas");
@@ -627,10 +627,6 @@ export function makeMossTexture(seed: number): THREE.CanvasTexture {
 /* ------------------------------------------------------------------ */
 
 /** a worn dirt trail with soft grassy edges; tiles along its length */
-export function makeTrailTexture(seed: number): THREE.CanvasTexture {
-  return makeTrailTextures(seed).map;
-}
-
 export interface TrailTextures {
   map: THREE.CanvasTexture;
   normalMap: THREE.CanvasTexture;
@@ -975,9 +971,3 @@ export function makeMoonTexture(seed: number): THREE.CanvasTexture {
   ctx.restore();
   return tex(canvas);
 }
-
-/* ------------------------------------------------------------------ */
-/* tiny helpers                                                        */
-/* ------------------------------------------------------------------ */
-
-export { tex as makeTextureFromCanvas, canvas2d as makeCanvas };

@@ -1,11 +1,24 @@
 /**
- * "Kiln Filament" — the site's ambient study, trimmed to essentials:
- * one domain warp feeding one ridged field, whose zero-crossings become
- * a single thread scale of kiln-light on deep umber. No interaction
- * response at all. Mobile-sized viewports only (gated in glkit); hidden
- * and uncompiled on larger screens until they come back to phone width.
+ * "Kiln Filament": the ambient shader behind the page on phone-sized
+ * screens. One domain warp feeding one ridged field, whose zero-crossings
+ * become a single thread scale of kiln-light on deep umber.
+ *
+ * Drawn as one fullscreen triangle at half resolution and upscaled by
+ * css. Paused in hidden tabs; reduced motion gets a single still frame.
+ * On wider screens the canvas stays hidden and the shader is never
+ * compiled.
  */
-import { bootShader } from "./glkit";
+const NARROW = "(max-width: 63.99rem)";
+const RESOLUTION_SCALE = 0.5;
+/** the moment the reduced-motion still frame is taken at */
+const STILL_TIME = 90;
+
+const VERT = `
+attribute vec2 a_pos;
+void main() {
+  gl_Position = vec4(a_pos, 0.0, 1.0);
+}
+`;
 
 const FRAG = `
 precision highp float;
@@ -66,6 +79,105 @@ void main() {
 }
 `;
 
+interface Painter {
+  draw(time: number): void;
+  /** matches the render buffer to the viewport */
+  fit(): void;
+}
+
+function compile(gl: WebGLRenderingContext, type: number, src: string): WebGLShader | null {
+  const shader = gl.createShader(type);
+  if (!shader) return null;
+  gl.shaderSource(shader, src);
+  gl.compileShader(shader);
+  return gl.getShaderParameter(shader, gl.COMPILE_STATUS) ? shader : null;
+}
+
+function createPainter(canvas: HTMLCanvasElement): Painter | null {
+  const gl = canvas.getContext("webgl", {
+    antialias: false,
+    depth: false,
+    stencil: false,
+    alpha: false,
+    powerPreference: "high-performance",
+  });
+  if (!gl) return null;
+
+  const vs = compile(gl, gl.VERTEX_SHADER, VERT);
+  const fs = compile(gl, gl.FRAGMENT_SHADER, FRAG);
+  if (!vs || !fs) return null;
+  const program = gl.createProgram();
+  gl.attachShader(program, vs);
+  gl.attachShader(program, fs);
+  gl.linkProgram(program);
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) return null;
+  gl.useProgram(program);
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  const aPos = gl.getAttribLocation(program, "a_pos");
+  gl.enableVertexAttribArray(aPos);
+  gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+  const uRes = gl.getUniformLocation(program, "u_res");
+  const uTime = gl.getUniformLocation(program, "u_time");
+
+  return {
+    draw(time) {
+      gl.uniform2f(uRes, canvas.width, canvas.height);
+      gl.uniform1f(uTime, time);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    },
+    fit() {
+      canvas.width = Math.max(2, Math.round(window.innerWidth * RESOLUTION_SCALE));
+      canvas.height = Math.max(2, Math.round(window.innerHeight * RESOLUTION_SCALE));
+      gl.viewport(0, 0, canvas.width, canvas.height);
+    },
+  };
+}
+
 export function bootFilament(canvas: HTMLCanvasElement): void {
-  bootShader(canvas, { frag: FRAG, gateQuery: "(max-width: 63.99rem)" });
+  const narrow = window.matchMedia(NARROW);
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  /** undefined until first needed; null when webgl is unavailable */
+  let painter: Painter | null | undefined;
+  let raf = 0;
+
+  const frame = (nowMs: number): void => {
+    painter?.draw(nowMs / 1000);
+    raf = requestAnimationFrame(frame);
+  };
+
+  const sync = (): void => {
+    if (narrow.matches && painter === undefined) {
+      painter = createPainter(canvas);
+      painter?.fit();
+    }
+    const shown = narrow.matches && !!painter;
+    canvas.style.display = shown ? "" : "none";
+
+    const animate = shown && !document.hidden && !reducedMotion.matches;
+    if (animate && !raf) {
+      raf = requestAnimationFrame(frame);
+    } else if (!animate && raf) {
+      cancelAnimationFrame(raf);
+      raf = 0;
+    }
+    if (shown && reducedMotion.matches) painter?.draw(STILL_TIME);
+  };
+
+  narrow.addEventListener("change", sync);
+  reducedMotion.addEventListener("change", sync);
+  document.addEventListener("visibilitychange", sync);
+
+  let resizeTimer = 0;
+  window.addEventListener("resize", () => {
+    window.clearTimeout(resizeTimer);
+    resizeTimer = window.setTimeout(() => {
+      painter?.fit();
+      sync();
+    }, 150);
+  });
+
+  sync();
 }

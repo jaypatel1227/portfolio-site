@@ -234,29 +234,6 @@ a:hover {
   color: var(--color-muted);
 }
 
-/* the glade footer overlays the scene; a full-strength hairline cuts a hard
-   seam across the landscape, so fade the divider into the dark instead */
-.glade-page .site-footer {
-  position: relative;
-  border-top-color: transparent;
-}
-
-.glade-page .site-footer::before {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto;
-  height: 1px;
-  pointer-events: none;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(244, 239, 230, 0.1) 16%,
-    rgba(244, 239, 230, 0.16) 50%,
-    rgba(244, 239, 230, 0.1) 84%,
-    transparent
-  );
-}
-
 .footer-links {
   display: flex;
   flex-wrap: wrap;
@@ -654,29 +631,4 @@ h1 {
   .name-dot {
     animation: none;
   }
-}
-
-/* final art study: the dark glade evaporates the hero text once you wander */
-.home-intro {
-  transition:
-    opacity 1.15s cubic-bezier(0.4, 0, 0.2, 1),
-    filter 1.15s cubic-bezier(0.4, 0, 0.2, 1),
-    transform 1.15s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-body.glade-away .home-intro {
-  opacity: 0;
-  filter: blur(12px);
-  transform: translateY(-1.1rem) scale(0.982);
-  pointer-events: none;
-}
-
-/* the dark glade: let clicks fall through the copy layer to the canvas;
-   links stay clickable */
-body.glade-page .site-main {
-  pointer-events: none;
-}
-
-body.glade-page .site-main a {
-  pointer-events: auto;
 }

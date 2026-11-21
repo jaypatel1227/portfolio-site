@@ -48,6 +48,22 @@ export const site = {
 } as const;
 
 export const xSocial = site.socials.find((social) => social.id === "x")!;
+const githubSocial = site.socials.find((social) => social.id === "github")!;
+
+/** the note pinned to the great tree in the glade. lines are broken by
+    hand: about 28 characters fit across the paper, and five lines down */
+export const gladeNote = {
+  title: "field notes",
+  lines: [
+    "i'm jay. i lead a software",
+    "team at epic in madison, wi.",
+    "i spend way too much time",
+    "tinkering with ai, and i'm",
+    "always happy to chat.",
+  ],
+  contacts: [site.email, githubSocial.url.replace("https://", "")],
+  signature: "- jay",
+};
 
 export type SeoImage = {
   url: string;
