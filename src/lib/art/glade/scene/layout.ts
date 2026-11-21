@@ -1,42 +1,28 @@
-/** Where things are in the glade: fixed positions, the trail and the terrain height. */
+/** The Ashen Ruins: metres, with north along negative z. */
 import * as THREE from "three";
-import { clamp, smoothstep, makeNoise, pointToSegmentDist2 } from "../math";
+import { makeNoise, pointToSegmentDist2, smoothstep } from "../math";
 
-export const HOME_POS = new THREE.Vector3(0, 1.7, 26.5);
-export const TREE_POS = new THREE.Vector3(10.5, 0, -2);
-export const TREE_LOOK = new THREE.Vector3(TREE_POS.x, 4.9, TREE_POS.z);
-export const BOUND_RADIUS = 74;
-export const TREE_FIELD_RADIUS = 126;
+export const HOME = new THREE.Vector3(0, 0, 29);
+export const CATHEDRAL = new THREE.Vector3(9, 0, -12);
+export const CASTLE = new THREE.Vector3(60, 24, -108);
+export const LOOK_AT = new THREE.Vector3(3.5, 8, -15);
+export const BOUND_RADIUS = 78;
+export const DOOR = new THREE.Vector3(CATHEDRAL.x, 0, -6);
+export const CAUSEWAY_WIDTH = 5.4;
 
-/** keep the forest off the landmarks so they read as destinations */
-export const LANDMARK_CLEARINGS = [
-  { x: -30, z: -33, r: 12 }, // the standing stones
-  { x: 33.5, z: -19, r: 8.5 }, // the hut
-  { x: -15, z: -55, r: 10 }, // the titan
-];
-
-export function pathDistance(x: number, z: number): number {
-  // the trail bends a little on its way to the tree
-  const bend = (Math.sin((z - HOME_POS.z) * 0.085) - Math.sin(0)) * 1.9;
-  return Math.sqrt(
-    pointToSegmentDist2(x + bend, z, HOME_POS.x, HOME_POS.z, TREE_POS.x, TREE_POS.z)
-  );
+export function causewayDistance(x: number, z: number): number {
+  return Math.sqrt(pointToSegmentDist2(x, z, HOME.x, HOME.z, DOOR.x, DOOR.z));
 }
 
-/** displaced-ground height, shared by the mesh, tree planting, flora and player */
-export function makeGroundHeight(seed: number): (x: number, z: number) => number {
-  const broad = makeNoise(seed ^ 0x1e37);
-  const detail = makeNoise(seed ^ 0x7a11);
+export function makeHeightAt(seed: number): (x: number, z: number) => number {
+  const noise = makeNoise(seed);
   return (x, z) => {
-    const r = Math.hypot(x, z);
-    const path = pathDistance(x, z);
-    const clearing = smoothstep(7, 30, r);
-    const bowl = smoothstep(22, 88, r);
-    const hills =
-      broad(x * 0.026, z * 0.026) * 5.6 +
-      detail(x * 0.075 + 40, z * 0.075 + 40) * 1.5 +
-      broad(x * 0.011 + 17, z * 0.011 + 17) * 9.0 * bowl;
-    const flatten = 1 - Math.exp(-(path * path) / 26);
-    return hills * clamp(clearing * 0.55 + bowl * 0.85, 0, 1) * flatten - 0.02;
+    const radius = Math.hypot(x, z);
+    const bowl = smoothstep(32, 115, radius);
+    const crags = Math.pow(Math.abs(noise(x * 0.037, z * 0.037)), 0.7);
+    const hills = bowl * (8 + crags * 22) + noise(x * 0.11, z * 0.11) * (0.2 + bowl * 1.4);
+    const path = smoothstep(CAUSEWAY_WIDTH * 0.5, 9, causewayDistance(x, z));
+    const foundation = smoothstep(9, 19, Math.hypot(x - CATHEDRAL.x, z - CATHEDRAL.z));
+    return hills * path * foundation - 0.16;
   };
 }
