@@ -1,16 +1,17 @@
 /** The Ashen Ruins: a broken causeway beneath a cathedral, castle and blood moon. */
 import * as THREE from "three";
 import type { Collision, World } from "../world";
+import { buildAtmosphere } from "./atmosphere";
 import { buildCastle } from "./castle";
 import { buildCathedral } from "./cathedral";
 import { BOUND_RADIUS, HOME, LOOK_AT, makeHeightAt } from "./layout";
-import type { NoteCopy } from "./note";
+import { buildNote, type NoteCopy } from "./note";
 import { createRuinsPost } from "./post";
 import { buildProps } from "./props";
 import { buildSky } from "./sky";
 import { buildTerrain } from "./terrain";
 
-export function createGlade(seed: number, _note: NoteCopy): World {
+export function createGlade(seed: number, note: NoteCopy): World {
   const scene = new THREE.Scene();
   scene.fog = new THREE.Fog(0x343644, 28, 160);
   scene.add(new THREE.HemisphereLight(0x8992b0, 0x0c090d, 0.85));
@@ -30,6 +31,8 @@ export function createGlade(seed: number, _note: NoteCopy): World {
   buildCathedral(scene, seed, collisions);
   buildCastle(scene, seed ^ 0xca57);
   const props = buildProps(scene, seed, heightAt, collisions);
+  const atmosphere = buildAtmosphere(scene, seed, props.fires, heightAt);
+  buildNote(scene, note);
   return {
     scene,
     home: { x: HOME.x, z: HOME.z, lookAt: LOOK_AT },
@@ -37,6 +40,6 @@ export function createGlade(seed: number, _note: NoteCopy): World {
     collisions,
     heightAt,
     createPost: (renderer, camera) => createRuinsPost(renderer, scene, camera),
-    update({ camera, time }) { sky.update(camera, time); props.update(time); },
+    update({ camera, time }) { sky.update(camera, time); props.update(time); atmosphere.update(camera, time); },
   };
 }

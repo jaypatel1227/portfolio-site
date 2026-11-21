@@ -2,6 +2,7 @@
 import * as THREE from "three";
 import { makeNoise, mulberry32 } from "../math";
 import { CAUSEWAY_WIDTH, DOOR, HOME, causewayDistance } from "./layout";
+import { makeStone } from "./masonry";
 
 export function buildTerrain(scene: THREE.Scene, seed: number, heightAt: (x: number, z: number) => number): void {
   const rng = mulberry32(seed);
@@ -40,27 +41,37 @@ export function buildTerrain(scene: THREE.Scene, seed: number, heightAt: (x: num
   map.colorSpace = THREE.SRGBColorSpace;
   scene.add(new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map, bumpMap: map, bumpScale: 0.12, vertexColors: true, roughness: 1, flatShading: true })));
 
-  const slabGeo = new THREE.CylinderGeometry(1, 1.08, 0.24, 5);
-  const slabs = new THREE.InstancedMesh(slabGeo, new THREE.MeshStandardMaterial({ color: 0x77717a, roughness: 1 }), 90);
+  const outline = new THREE.Shape();
+  for (let i = 0; i < 7; i++) {
+    const angle = i / 7 * Math.PI * 2, radius = 0.48 + rng() * 0.12;
+    const x = Math.cos(angle) * radius, y = Math.sin(angle) * radius;
+    if (i === 0) outline.moveTo(x, y); else outline.lineTo(x, y);
+  }
+  outline.closePath();
+  const slabGeo = new THREE.ExtrudeGeometry(outline, { depth: 0.055, bevelEnabled: true, bevelThickness: 0.018, bevelSize: 0.035, bevelSegments: 2, steps: 1 });
+  const uv = slabGeo.attributes.uv;
+  for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) / 3, uv.getY(i) / 3);
+  slabGeo.rotateX(-Math.PI / 2);
+  const slabs = new THREE.InstancedMesh(slabGeo, makeStone(seed), 300);
   const matrix = new THREE.Matrix4();
   const rotation = new THREE.Quaternion();
   const scale = new THREE.Vector3();
   const position = new THREE.Vector3();
   let count = 0;
-  for (let row = 0; row < 30; row++) {
-    const t = row / 29;
+  for (let row = 0; row < 60; row++) {
+    const t = row / 59;
     const x = THREE.MathUtils.lerp(HOME.x, DOOR.x, t);
     const z = THREE.MathUtils.lerp(HOME.z, DOOR.z, t);
-    for (let col = 0; col < 3; col++) {
-      if (rng() < 0.17) continue;
-      const px = x + (col - 1) * 1.65 + (rng() - 0.5) * 0.8;
-      const pz = z + (rng() - 0.5) * 1.15;
-      position.set(px, heightAt(px, pz) + 0.12 + rng() * 0.08, pz);
-      rotation.setFromEuler(new THREE.Euler((rng() - 0.5) * 0.2, rng() * 6.28, (rng() - 0.5) * 0.22));
-      scale.set(0.65 + rng() * 0.45, 0.65 + rng() * 0.5, 0.55 + rng() * 0.5);
+    for (let col = 0; col < 5; col++) {
+      if (rng() < 0.13) continue;
+      const px = x + (col - 2) * 0.93 + (rng() - 0.5) * 0.4;
+      const pz = z + (rng() - 0.5) * 0.55;
+      position.set(px, heightAt(px, pz) - 0.03 + rng() * 0.015, pz);
+      rotation.setFromEuler(new THREE.Euler((rng() - 0.5) * 0.035, rng() * 6.28, (rng() - 0.5) * 0.035));
+      scale.set(0.65 + rng() * 0.5, 1, 0.65 + rng() * 0.5);
       matrix.compose(position, rotation, scale);
       slabs.setMatrixAt(count, matrix);
-      slabs.setColorAt(count++, color.setHSL(0.09, 0.035, 0.3 + rng() * 0.22));
+      slabs.setColorAt(count++, color.setHSL(0.09, 0.035, 0.65 + rng() * 0.2));
     }
   }
   slabs.count = count;
