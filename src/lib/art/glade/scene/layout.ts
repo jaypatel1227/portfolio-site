@@ -3,11 +3,11 @@ import * as THREE from "three";
 import { makeNoise, pointToSegmentDist2, smoothstep } from "../math";
 
 export const HOME = new THREE.Vector3(0, 0, 29);
-export const CATHEDRAL = new THREE.Vector3(9, 0, -12);
-export const CASTLE = new THREE.Vector3(60, 24, -108);
-export const LOOK_AT = new THREE.Vector3(3.5, 8, -15);
+export const CATHEDRAL = new THREE.Vector3(14, 0, -32);
+export const CASTLE = new THREE.Vector3(94, 35, -145);
+export const LOOK_AT = new THREE.Vector3(6, 7, -38);
 export const BOUND_RADIUS = 78;
-export const DOOR = new THREE.Vector3(CATHEDRAL.x, 0, -6);
+export const DOOR = new THREE.Vector3(CATHEDRAL.x, 0, CATHEDRAL.z + 6);
 export const CAUSEWAY_WIDTH = 5.4;
 
 export function causewayDistance(x: number, z: number): number {

@@ -30,7 +30,7 @@ float fbm(vec2 p) {
 }
 void main() {
   vec3 d = normalize(vDirection);
-  vec3 moon = normalize(vec3(120.0, 86.0, -255.0));
+  vec3 moon = normalize(vec3(151.0, 102.0, -255.0));
   float angle = acos(clamp(dot(d, moon), -1.0, 1.0));
   float horizon = exp(-pow((d.y - 0.025) * 5.0, 2.0));
   float moonSide = pow(max(dot(normalize(d.xz), normalize(moon.xz)), 0.0), 9.0);
