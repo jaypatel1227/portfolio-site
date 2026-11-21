@@ -11,8 +11,8 @@ export const site = {
   locale: "en",
   language: "en",
   description:
-    "Software developer and team lead in Madison. I work at Epic. I've worked in several Cogito (analytics) spaces there, but now I work on the Agent Factory team. I'm also really interested in AI and would love to talk shop.",
-  bio: "I'm Jay. I lead a software team at Epic Systems in Madison, Wisconsin. I spend way too much time tinkering with AI and always happy to chat",
+    "Software developer and team lead at Epic in Madison. I've worked in several Cogito (analytics) spaces there, but now I work on the Agent Factory team. I'm also really interested in AI and would love to talk shop.",
+  bio: "I'm Jay. I lead a software team at Epic Systems. Building the paint brushes and easel's for the renaissance of software.",
   jobTitle: "Software Developer and Team Lead - Epic Agent Factory",
   location: {
     city: "Madison",
