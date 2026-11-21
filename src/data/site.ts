@@ -49,6 +49,16 @@ export const site = {
 
 export const xSocial = site.socials.find((social) => social.id === "x")!;
 
+export const islandNote = {
+  title: "thanks for stopping by",
+  lines: [
+    "thanks for taking a look",
+    "around. enjoy the rest",
+    "of the site.",
+  ],
+  signature: "- jay",
+};
+
 export type SeoImage = {
   url: string;
   alt: string;
