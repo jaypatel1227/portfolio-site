@@ -42,3 +42,16 @@ void it("keeps framing finite when the layout leaves no gap", () => {
     assert.ok(Number.isFinite(frame.center));
   }
 });
+
+void it("keeps the island inside short landscape viewports even when the hero and footer overflow", () => {
+  for (const [width, height, right, hero, footer] of [[568, 260, 533, 287, 391], [640, 300, 605, 287, 391], [740, 360, 346, 355, 459]]) {
+    const frame = restFraming(width, height, { right, bottom: hero }, 74, footer);
+    const radius = (frame.side ? 19 : 17) / frame.vertical;
+    assert.ok(frame.centerY - radius >= 0);
+    assert.ok(frame.centerY + radius <= 1);
+    assert.ok(frame.centerY > 0 && frame.centerY < 1);
+    const horizontalRadius = 25 / frame.vertical * height / width;
+    assert.ok(frame.centerX - horizontalRadius >= 0);
+    assert.ok(frame.centerX + horizontalRadius <= 1);
+  }
+});

@@ -5,10 +5,14 @@ import { prepareVapor } from "./page/vapor";
 
 export function bootIsland(canvas: HTMLCanvasElement, note: HTMLElement | null): () => void {
   const events = new AbortController(), { signal } = events;
+  const hero = document.querySelector<HTMLElement>(".home-intro");
   let runtime: ReturnType<typeof createRuntime>;
   try {
     runtime = createRuntime(canvas, {
-      phase: (phase) => { document.body.dataset.island = phase; },
+      phase: (phase) => {
+        document.body.dataset.island = phase;
+        if (hero) hero.inert = phase === "engaged" || phase === "away";
+      },
       note: (visible) => { if (note) note.hidden = !visible; },
     }, signal);
   } catch {
@@ -16,7 +20,6 @@ export function bootIsland(canvas: HTMLCanvasElement, note: HTMLElement | null):
     return () => {};
   }
   const wide = matchMedia(WALK_MEDIA), reduced = matchMedia(REDUCED_MEDIA);
-  const hero = document.querySelector<HTMLElement>(".home-intro");
   const resize = (): void => runtime.resize(innerWidth, innerHeight, measureRestFrame(hero, innerWidth, innerHeight));
   const syncLoop = (): void => runtime.run(!document.hidden);
   function sync(): void {
@@ -35,5 +38,5 @@ export function bootIsland(canvas: HTMLCanvasElement, note: HTMLElement | null):
   if (hero) { prepareVapor(hero); observer.observe(hero); }
   if (import.meta.env.DEV) (window as unknown as { __island: unknown }).__island = runtime.debug;
   sync();
-  return () => { events.abort(); observer.disconnect(); runtime.dispose(); delete document.body.dataset.island; };
+  return () => { events.abort(); observer.disconnect(); runtime.dispose(); if (hero) hero.inert = false; delete document.body.dataset.island; };
 }

@@ -1,6 +1,12 @@
 const ZOOM_KEYS = new Set(["Equal", "Minus", "NumpadAdd", "NumpadSubtract"]);
 const MOVE_KEYS = new Set(["KeyW", "KeyA", "KeyS", "KeyD", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "KeyQ", "KeyE", "ShiftLeft", "ShiftRight"]);
 export function isControl(code: string): boolean { return MOVE_KEYS.has(code) || ZOOM_KEYS.has(code); }
+export function isModifier(code: string): boolean { return code === "ShiftLeft" || code === "ShiftRight"; }
+export function controlCode(code: string, key: string): string | null {
+  if (key === "+" || key === "=") return "Equal";
+  if (key === "-" || key === "_") return "Minus";
+  return isControl(code) ? code : null;
+}
 export function controlAxes(keys: ReadonlySet<string>) {
   return {
     forward: Number(keys.has("KeyW") || keys.has("ArrowUp")) - Number(keys.has("KeyS") || keys.has("ArrowDown")),

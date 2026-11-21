@@ -19,7 +19,8 @@ export function createRuntime(canvas: HTMLCanvasElement, bridge: Bridge, signal:
   const setPhase = (next: Phase): void => { phase = next; bridge.phase(next); };
   const input = bindInput(canvas, {
     enabled: () => enabled,
-    engage() { drift = null; view.transition(1); if (phase === "rest" || phase === "drifting") setPhase("engaged"); },
+    engaged: () => phase === "engaged" || phase === "away",
+    engage(zooming = false) { drift = null; view.transition(1, zooming); if (phase === "rest" || phase === "drifting") setPhase("engaged"); },
     home() { drift = { elapsed: 0, ...player, yaw: view.yaw }; view.rotate(view.yaw); view.transition(0); setPhase("drifting"); },
     orbit: (delta) => view.orbit(delta), magnify: (exponent) => view.magnify(exponent),
   }, signal);
