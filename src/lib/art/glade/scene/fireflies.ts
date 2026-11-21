@@ -1,6 +1,7 @@
-/** Fireflies. */
+/** Rising embers, golden tree motes and windblown ash. */
 import * as THREE from "three";
-import { TAU, clamp, mulberry32 } from "../math";
+import { TAU, mulberry32 } from "../math";
+import { TREE_POS } from "./layout";
 
 export interface FireflyField {
   update: (dt: number, time: number, playerPos: THREE.Vector3) => void;
@@ -46,24 +47,24 @@ export function buildFireflies(scene: THREE.Scene, seed: number): FireflyField {
   for (let i = 0; i < COUNT; i++) {
     const a = rng() * TAU;
     const r = 4 + Math.pow(rng(), 0.7) * 62;
-    const x = Math.cos(a) * r;
-    const z = Math.sin(a) * r;
+    const x = i < 60 ? TREE_POS.x + Math.cos(a) * rng() * 9 : Math.cos(a) * r;
+    const z = i < 60 ? TREE_POS.z + Math.sin(a) * rng() * 9 : Math.sin(a) * r;
     homes[i * 2] = x;
     homes[i * 2 + 1] = z;
     positions[i * 3] = x;
-    positions[i * 3 + 1] = 0.5 + rng() * 5.5;
+    positions[i * 3 + 1] = 0.5 + rng() * 18;
     positions[i * 3 + 2] = z;
     seeds[i] = rng() * TAU;
     sizes[i] = 0.16 + Math.pow(rng(), 2.4) * 0.6;
     const warm = rng();
     if (warm < 0.68) {
-      tints[i * 3] = 1.0;
-      tints[i * 3 + 1] = 0.78 + rng() * 0.16;
-      tints[i * 3 + 2] = 0.34 + rng() * 0.2;
+      tints[i * 3] = 3.0;
+      tints[i * 3 + 1] = 0.85 + rng() * 0.6;
+      tints[i * 3 + 2] = 0.08 + rng() * 0.12;
     } else {
-      tints[i * 3] = 0.48 + rng() * 0.2;
-      tints[i * 3 + 1] = 0.92;
-      tints[i * 3 + 2] = 0.82 + rng() * 0.15;
+      tints[i * 3] = 2.5;
+      tints[i * 3 + 1] = 0.35 + rng() * 0.3;
+      tints[i * 3 + 2] = 0.025;
     }
   }
 
@@ -84,6 +85,24 @@ export function buildFireflies(scene: THREE.Scene, seed: number): FireflyField {
   points.frustumCulled = false;
   scene.add(points);
 
+  const ashPositions = new Float32Array(240 * 3);
+  for (let i = 0; i < 240; i++) {
+    ashPositions[i * 3] = (rng() - 0.5) * 120;
+    ashPositions[i * 3 + 1] = rng() * 28;
+    ashPositions[i * 3 + 2] = (rng() - 0.5) * 120;
+  }
+  const ashGeo = new THREE.BufferGeometry();
+  ashGeo.setAttribute("position", new THREE.BufferAttribute(ashPositions, 3));
+  const ash = new THREE.Points(ashGeo, new THREE.PointsMaterial({
+    color: 0xa79c8d,
+    size: 0.055,
+    transparent: true,
+    opacity: 0.4,
+    depthWrite: false,
+  }));
+  ash.frustumCulled = false;
+  scene.add(ash);
+
   return {
     update(dt, time, playerPos) {
       (mat.uniforms.u_time as THREE.IUniform).value = time;
@@ -92,15 +111,16 @@ export function buildFireflies(scene: THREE.Scene, seed: number): FireflyField {
         let x = positions[i * 3];
         let y = positions[i * 3 + 1];
         let z = positions[i * 3 + 2];
-        x += Math.sin(time * 0.31 + s * 2.3) * 0.008;
-        z += Math.cos(time * 0.27 + s * 1.7) * 0.008;
-        y += Math.sin(time * 0.5 + s * 3.1) * 0.006;
-        y = clamp(y, 0.35, 6.5);
+        x = homes[i * 2] + Math.sin(time * 0.31 + s * 2.3) * 0.8;
+        z = homes[i * 2 + 1] + Math.cos(time * 0.27 + s * 1.7) * 0.8;
+        y = 0.35 + ((time * (0.22 + s * 0.025) + s * 3.1) % 19);
         if (Math.hypot(x - playerPos.x, z - playerPos.z) > 92) {
           const a = Math.random() * TAU;
           const r = 6 + Math.random() * 54;
           x = playerPos.x + Math.cos(a) * r;
           z = playerPos.z + Math.sin(a) * r;
+          homes[i * 2] = x;
+          homes[i * 2 + 1] = z;
           y = 0.5 + Math.random() * 5;
         }
         positions[i * 3] = x;
@@ -108,6 +128,13 @@ export function buildFireflies(scene: THREE.Scene, seed: number): FireflyField {
         positions[i * 3 + 2] = z;
       }
       geo.attributes.position.needsUpdate = true;
+      for (let i = 0; i < 240; i++) {
+        ashPositions[i * 3] += dt * 0.17;
+        ashPositions[i * 3 + 1] -= dt * (0.18 + (i % 5) * 0.035);
+        if (ashPositions[i * 3 + 1] < 0) ashPositions[i * 3 + 1] = 28;
+        if (ashPositions[i * 3] > 60) ashPositions[i * 3] = -60;
+      }
+      ashGeo.attributes.position.needsUpdate = true;
     },
   };
 }

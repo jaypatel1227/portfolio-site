@@ -1,4 +1,4 @@
-/** The night sky dome: gradient, stars and the moon. */
+/** Smoke-veiled charcoal sky and a low blood moon. */
 import * as THREE from "three";
 import { makeDotTexture, makeMoonTexture } from "./textures";
 
@@ -69,32 +69,29 @@ void main() {
   float h = dir.y;
   vec2 az = normalize(dir.xz + vec2(0.0001));
 
-  // deep blue-charcoal gradient, darker than before so the details carry it
-  vec3 zenith = vec3(0.0015, 0.003, 0.009);
-  vec3 upper = vec3(0.006, 0.010, 0.024);
-  vec3 horizon = vec3(0.028, 0.036, 0.049);
+  vec3 zenith = vec3(0.009, 0.006, 0.009);
+  vec3 upper = vec3(0.038, 0.019, 0.023);
+  vec3 horizon = vec3(0.18, 0.065, 0.033);
   vec3 col = mix(horizon, upper, smoothstep(-0.02, 0.28, h));
   col = mix(col, zenith, smoothstep(0.2, 0.9, h));
 
-  // moon azimuth: moon sits high to the west-northwest
+  // scattered ember light through the smoke
   vec2 moonAz = normalize(vec2(-0.4, -0.92));
   vec2 awayAz = -moonAz;
 
   // zodiacal light: a faint wedge of scattered moonlight rising along the
   // ecliptic on the moon side, brightest low and fading with altitude
   float zo = pow(max(dot(az, moonAz), 0.0), 3.0) * exp(-max(h, 0.0) * 3.6);
-  col += vec3(0.05, 0.048, 0.042) * zo;
+  col += vec3(0.12, 0.035, 0.009) * zo;
 
-  // thin cirrus, combed out toward the moon: horizontal striations, not
-  // clouds, and never bright enough to soften the stars
+  // smoke combed toward the moon
   float cirH = exp(-pow((h - 0.34) * 4.6, 2.0));
   float cir = fbm2(vec2(dir.x * 1.9 + dir.z * 1.1 + u_time * 0.004, h * 14.0));
   cir = smoothstep(0.52, 0.86, cir) * cirH;
   float cirMoon = 0.5 + 0.5 * dot(az, moonAz);
-  col += mix(vec3(0.028, 0.03, 0.04), vec3(0.075, 0.07, 0.055), cirMoon) * cir * 0.75;
+  col += mix(vec3(0.04, 0.024, 0.027), vec3(0.17, 0.07, 0.035), cirMoon) * cir * 1.4;
 
-  // a low aurora curtain on the far side, barely there: two drifting
-  // filaments, teal with a whisper of violet, folded by fbm
+  // drifting smoke filaments on the far side
   float asect = pow(max(dot(az, awayAz), 0.0), 2.6);
   float awin = smoothstep(0.02, 0.12, h) * (1.0 - smoothstep(0.3, 0.62, h));
   float aband = fbm2(vec2(dir.x * 3.1 + u_time * 0.011, dir.z * 3.1 - u_time * 0.007));
@@ -102,8 +99,8 @@ void main() {
   float afilament = sin(dir.x * 5.0 + aband * 9.0 + u_time * 0.05);
   afilament = pow(0.5 + 0.5 * afilament, 3.0);
   float aur = aband * afilament * asect * awin;
-  col += vec3(0.035, 0.085, 0.055) * aur * 0.8;
-  col += vec3(0.05, 0.035, 0.085) * aur * aur * 0.9;
+  col += vec3(0.07, 0.028, 0.02) * aur * 0.8;
+  col += vec3(0.07, 0.025, 0.02) * aur * aur * 0.9;
 
   // a faint warm breath over the great tree's side of the horizon
   float warm = pow(max(dot(az, normalize(vec2(0.36, -0.93))), 0.0), 5.0) * exp(-max(h, 0.0) * 5.4);
@@ -145,7 +142,7 @@ void main() {
   col += stars * u_stars * 0.85;
 
   // thin haze where the fog meets the treeline
-  col = mix(vec3(0.026, 0.032, 0.045), col, smoothstep(-0.09, 0.1, h));
+  col = mix(vec3(0.09, 0.052, 0.042), col, smoothstep(-0.09, 0.1, h));
 
   gl_FragColor = vec4(col, 1.0);
 }
@@ -160,7 +157,7 @@ export function buildSky(scene: THREE.Scene, seed: number): SkyRig {
   const mat = new THREE.ShaderMaterial({
     vertexShader: SKY_VERT,
     fragmentShader: SKY_FRAG,
-    uniforms: { u_time: { value: 0 }, u_stars: { value: 1 } },
+    uniforms: { u_time: { value: 0 }, u_stars: { value: 0.035 } },
     side: THREE.BackSide,
     depthWrite: false,
     fog: false,
@@ -173,19 +170,19 @@ export function buildSky(scene: THREE.Scene, seed: number): SkyRig {
   const dot = makeDotTexture();
   const moonTex = makeMoonTexture(seed ^ 0x30e);
   const moon = new THREE.Mesh(
-    new THREE.CircleGeometry(9.5, 64),
-    new THREE.MeshBasicMaterial({ map: moonTex, fog: false, color: 0xf6ecd8 })
+    new THREE.CircleGeometry(23, 64),
+    new THREE.MeshBasicMaterial({ map: moonTex, fog: false, color: new THREE.Color(2.8, 0.27, 0.055) })
   );
-  moon.position.set(-92, 92, -212);
+  moon.position.set(-25, 78, -212);
   moon.lookAt(0, 1.7, 0);
   scene.add(moon);
 
   const halo = new THREE.Sprite(
     new THREE.SpriteMaterial({
       map: dot,
-      color: 0xb8c6e2,
+      color: 0xc74318,
       transparent: true,
-      opacity: 0.12,
+      opacity: 0.3,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       depthTest: false,
@@ -193,14 +190,14 @@ export function buildSky(scene: THREE.Scene, seed: number): SkyRig {
     })
   );
   halo.position.copy(moon.position);
-  halo.scale.setScalar(86);
+  halo.scale.setScalar(140);
   halo.renderOrder = -9;
   scene.add(halo);
 
   const innerHalo = new THREE.Sprite(
     new THREE.SpriteMaterial({
       map: dot,
-      color: 0xfff2d8,
+      color: 0xff681f,
       transparent: true,
       opacity: 0.2,
       blending: THREE.AdditiveBlending,

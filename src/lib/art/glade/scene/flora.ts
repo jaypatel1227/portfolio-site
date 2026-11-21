@@ -77,8 +77,8 @@ export function buildFlora(
       side: THREE.DoubleSide,
       roughness: 1,
       metalness: 0,
-      color: 0xffffff,
-      emissive: 0x141d0e,
+      color: 0xb4a080,
+      emissive: 0x21170e,
       emissiveMap: map,
       emissiveIntensity: 0.3,
     });
@@ -330,7 +330,7 @@ export function buildFlora(
     roughness: 1,
     metalness: 0,
     color: 0xffffff,
-    emissive: 0x141a20,
+    emissive: 0x26190f,
     emissiveIntensity: 0.6,
   });
   addWind(flowerMat, timeUniform, 0.7);
@@ -481,8 +481,8 @@ export function buildFlora(
   const hrc = new Float32Array(hrp.count * 3);
   const stoneC = new THREE.Color(0x33352f);
   const stoneLitC = new THREE.Color(0x4a4c44);
-  const mossC = new THREE.Color(0x2b3f22);
-  const mossLitC = new THREE.Color(0x46603a);
+  const mossC = new THREE.Color(0x3c3728);
+  const mossLitC = new THREE.Color(0x60543a);
   const creviceC = new THREE.Color(0x151713);
   const tmpC = new THREE.Color();
   const stoneTmp = new THREE.Color();
@@ -548,8 +548,8 @@ export function buildFlora(
   const capGeo = new THREE.SphereGeometry(1, 10, 8, 0, TAU, 0, Math.PI / 2);
   capGeo.scale(1, 0.72, 1);
   const capMat = new THREE.MeshStandardMaterial({
-    color: 0x0a1d1a,
-    emissive: 0x46e3c4,
+    color: 0x29180c,
+    emissive: 0xe99424,
     emissiveIntensity: 1.1,
     roughness: 0.5,
   });
@@ -590,7 +590,7 @@ export function buildFlora(
   shrooms.frustumCulled = false;
   scene.add(shrooms);
 
-  const shroomLight = new THREE.PointLight(0x3fd8c0, 4.5, 9, 2);
+  const shroomLight = new THREE.PointLight(0xe99424, 4.5, 9, 2);
   shroomLight.position.set(TREE_POS.x + 4.4, groundHeightAt(TREE_POS.x + 4.4, TREE_POS.z + 3.4) + 0.5, TREE_POS.z + 3.4);
   scene.add(shroomLight);
 

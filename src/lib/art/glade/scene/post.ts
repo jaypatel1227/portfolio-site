@@ -32,17 +32,19 @@ const GradeShader = {
 
       // a soft vignette; the glade falls away at the edges
       float vig = smoothstep(0.9, 0.22, length(d * vec2(1.04, 1.0)));
-      col *= mix(0.56, 1.0, vig);
+      col *= mix(0.4, 1.0, vig);
 
-      // gentle split tone: cool moonlit shadows, faintly warm highlights
+      // ash midtones, wine-black shadows and burnished highlights
       float l = dot(col, vec3(0.2126, 0.7152, 0.0722));
-      col = mix(col, col * vec3(0.9, 0.99, 1.12), (1.0 - smoothstep(0.02, 0.42, l)) * 0.6);
-      col = mix(col, col * vec3(1.08, 1.01, 0.93), smoothstep(0.34, 1.0, l) * 0.55);
+      col = mix(vec3(l), col, 0.72);
+      col *= vec3(1.09, 0.94, 0.79);
+      col = max(vec3(0.0), col - 0.003);
+      col = mix(col, col * vec3(1.16, 1.03, 0.82), smoothstep(0.24, 1.0, l) * 0.6);
       col = clamp(col, 0.0, 1.0);
 
       // very fine grain, keeps the fog from banding
       float g = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453);
-      col += (g - 0.5) * 0.01;
+      col += (g - 0.5) * 0.016;
 
       gl_FragColor = vec4(col, 1.0);
     }
@@ -55,14 +57,14 @@ export function createGladePost(
   scene: THREE.Scene,
   camera: THREE.Camera
 ): Post {
-  renderer.setClearColor(0x080a0f, 1);
+  renderer.setClearColor(0x140d0e, 1);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 0.95;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
 
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.32, 0.72, 0.85);
+  const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.5, 0.85, 0.55);
   composer.addPass(bloom);
   composer.addPass(new ShaderPass(GradeShader));
   composer.addPass(new OutputPass());

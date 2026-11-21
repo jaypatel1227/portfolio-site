@@ -21,7 +21,7 @@ export function buildMist(scene: THREE.Scene, seed: number): MistRig {
       opacity: 0.016 + rng() * 0.026,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
-      color: i % 3 === 0 ? 0x8f8a7a : 0x556070,
+      color: i % 3 === 0 ? 0x9c8164 : 0x785856,
       fog: false,
     });
     const sprite = new THREE.Sprite(mat);
@@ -41,7 +41,7 @@ export function buildMist(scene: THREE.Scene, seed: number): MistRig {
       opacity: 0.02 + rng() * 0.018,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
-      color: 0x6d6a5f,
+      color: 0x89705c,
       fog: false,
     });
     const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), mat);
@@ -64,7 +64,7 @@ export function buildMist(scene: THREE.Scene, seed: number): MistRig {
       opacity: 0.026,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
-      color: 0x6a7080,
+      color: 0x806960,
       fog: false,
     })
   );
@@ -122,7 +122,7 @@ export function buildMist(scene: THREE.Scene, seed: number): MistRig {
     { y: 2.4, z: -34, s: 180, o: 0.07 },
     { y: 3.8, z: -58, s: 240, o: 0.05 },
   ].forEach((h) => {
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(h.s, h.s * 0.6), hazeMat(h.o, 0x6d7c93));
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(h.s, h.s * 0.6), hazeMat(h.o, 0x83665b));
     m.position.set(0, h.y, h.z);
     m.renderOrder = 2;
     scene.add(m);

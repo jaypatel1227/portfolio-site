@@ -86,10 +86,10 @@ export function buildTrees(
       side: THREE.DoubleSide,
       roughness: 1,
       metalness: 0,
-      color: 0xffffff,
+      color: 0xb6a18a,
       // a whisper of cool sky-light keeps the nearest silhouettes from
       // crushing to pure black and losing their bough detail
-      emissive: 0x0c161d,
+      emissive: 0x1d1411,
       emissiveIntensity: 0.42,
     });
   };
@@ -115,8 +115,8 @@ export function buildTrees(
       const dist = Math.hypot(s.x - ax, s.z - az);
       const far = clamp(dist / 110, 0, 1);
       col.setHSL(
-        0.26 + rng() * 0.055,
-        (0.15 + rng() * 0.15) * (1 - far * 0.55),
+        0.08 + rng() * 0.055,
+        (0.08 + rng() * 0.1) * (1 - far * 0.55),
         0.27 + far * 0.25 + rng() * 0.1
       );
       mesh.setColorAt(i, col);

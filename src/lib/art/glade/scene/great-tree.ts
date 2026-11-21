@@ -123,7 +123,9 @@ void main() {
   float sky = 0.5 + 0.5 * n.y;
   bark *= 0.28 + ndl * 0.72 + sky * 0.18;
   float rim = pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 2.5);
-  bark += vec3(0.2, 0.3, 0.48) * rim * 0.26;
+  bark += vec3(0.48, 0.25, 0.06) * rim * 0.4;
+  float vein = pow(smoothstep(0.68, 0.94, flute), 3.0);
+  bark += vec3(1.05, 0.34, 0.025) * vein * (0.35 + 0.65 * grain2);
 
   gl_FragColor = vec4(bark, 1.0);
   #include <fog_fragment>
@@ -185,10 +187,6 @@ void main() {
   float wrapped = clamp(dot(n, L) * 0.5 + 0.5, 0.0, 1.0);
   wrapped = pow(wrapped, 1.35);
 
-  // cool sky above, warm dark earth below
-  float sky = 0.5 + 0.5 * n.y;
-  vec3 ambient = mix(vec3(0.02, 0.03, 0.032), vec3(0.1, 0.13, 0.16), sky);
-
   // moonlight bleeding through the leaf from behind
   float back = pow(clamp(dot(-v, L), 0.0, 1.0), 2.4);
   vec3 transmit = vec3(0.28, 0.38, 0.17) * back * 0.4;
@@ -197,11 +195,12 @@ void main() {
 
   // leaf albedo, lifted out of the near-black so the crown reads as foliage
   vec3 leaf = texel.rgb * vTint;
-  vec3 col = leaf * (ambient * 1.55 + wrapped * vec3(0.2, 0.25, 0.15));
+  float gold = dot(leaf, vec3(0.3, 0.6, 0.1));
+  vec3 col = vec3(0.9, 0.36, 0.035) * (0.12 + gold * 2.8) * (0.35 + wrapped * 0.65);
   col += leaf * transmit;
   // moonlight catching the sky-facing leaves and the silhouette edge
-  col += vec3(0.12, 0.17, 0.25) * rim * 0.08;
-  col += vec3(0.04, 0.055, 0.08) * max(n.y, 0.0) * 0.11;
+  col += vec3(0.6, 0.25, 0.025) * rim * 0.5;
+  col += vec3(0.15, 0.065, 0.008) * max(n.y, 0.0);
 
   gl_FragColor = vec4(col, 1.0);
   #include <fog_fragment>
@@ -523,6 +522,10 @@ export function buildGreatTree(
 
   group.position.set(TREE_POS.x, groundY, TREE_POS.z);
   scene.add(group);
+
+  const treeLight = new THREE.PointLight(0xffb744, 65, 28, 2);
+  treeLight.position.set(TREE_POS.x, groundY + 6, TREE_POS.z);
+  scene.add(treeLight);
 
   // a broad shadow anchors the tree to the clearing
   const shadowGeo = new THREE.PlaneGeometry(1, 1);
