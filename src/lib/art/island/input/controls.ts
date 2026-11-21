@@ -3,6 +3,7 @@ const MOVE_KEYS = new Set(["KeyW", "KeyA", "KeyS", "KeyD", "ArrowUp", "ArrowDown
 export function isControl(code: string): boolean { return MOVE_KEYS.has(code) || ZOOM_KEYS.has(code); }
 export function isModifier(code: string): boolean { return code === "ShiftLeft" || code === "ShiftRight"; }
 export function controlCode(code: string, key: string): string | null {
+  if (MOVE_KEYS.has(code)) return code;
   if (key === "+" || key === "=") return "Equal";
   if (key === "-" || key === "_") return "Minus";
   return isControl(code) ? code : null;

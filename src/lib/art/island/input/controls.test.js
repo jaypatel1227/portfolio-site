@@ -27,3 +27,12 @@ void it("normalizes wheel modes and pinch while bounding extreme deltas", () => 
   assert.equal(wheelExponent(Infinity, 0, true, 900), 1);
   assert.equal(wheelExponent(-1e9, 0, false, 900), -1);
 });
+
+void it("prioritizes physical movement and orbit over zoom characters on alternate layouts", () => {
+  const code = controlCode("KeyA", "-");
+  assert.equal(code, "KeyA");
+  assert.equal(controlAxes(new Set([code])).strafe, -1);
+  assert.equal(controlAxes(new Set([code])).zoom, 0);
+  assert.equal(controlCode("KeyQ", "+"), "KeyQ");
+  assert.equal(controlCode("Slash", "-"), "Minus");
+});
