@@ -1,0 +1,193 @@
+---
+import { islandNote } from "../../data/site";
+
+---
+
+<div class="island" aria-hidden="true">
+  <canvas class="island-canvas"></canvas>
+  <div class="island-vignette"></div>
+</div>
+
+<p class="island-hint" aria-hidden="true">wasd to wander / q e or drag to orbit / scroll or + − to zoom / esc to drift home</p>
+<p class="island-sr">
+  this page contains a sprite-stack forest clearing. use the w a s d keys or arrow keys to
+  move the little wanderer, shift to hurry, q and e or drag to orbit the camera, scroll or plus and minus to zoom, and escape
+  to drift home. approach the note on the old tree to read it.
+</p>
+
+<aside class="island-note" aria-label="note pinned to the old tree" hidden>
+  <h2>{islandNote.title}</h2>
+  <p class="island-note-body">{islandNote.lines.join(" ")}</p>
+  <p class="island-note-signature">{islandNote.signature}</p>
+  <p class="island-note-close">walk away to close</p>
+</aside>
+
+<style>
+  .island {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .island-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    transition: opacity 0.6s ease;
+  }
+
+  /* a still frame never intercepts scrolling or taps */
+  .island-canvas[data-walkable] {
+    pointer-events: auto;
+    cursor: grab;
+  }
+
+  /* settle the edges so the hero copy always sits in calm air */
+  .island-vignette {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(to right, rgba(20, 17, 14, 0.72) 0%, rgba(20, 17, 14, 0.35) 26%, transparent 46%),
+      linear-gradient(to bottom, rgba(20, 17, 14, 0.42) 0%, transparent 16%, transparent 82%, rgba(20, 17, 14, 0.5) 100%);
+  }
+
+  .island-hint {
+    position: fixed;
+    left: 50%;
+    bottom: 1.1rem;
+    transform: translateX(-50%);
+    z-index: 2;
+    margin: 0;
+    pointer-events: none;
+    font-size: 0.92rem;
+    letter-spacing: 0.045em;
+    color: var(--color-muted);
+    opacity: 0.8;
+    transition: opacity 0.7s ease;
+  }
+
+  /* the walk is offered on the same terms the script uses: see lib/art/island/boot.ts */
+  @media (max-width: 63.99rem), (prefers-reduced-motion: reduce) {
+    .island-hint {
+      display: none;
+    }
+  }
+
+  .island-sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .island-note[hidden] { display: none; }
+  .island-note {
+    position: fixed;
+    z-index: 5;
+    top: 21%;
+    right: 5%;
+    width: min(24rem, 88vw);
+    padding: 1.8rem;
+    background: #e1d6b5;
+    color: #302f3f;
+    border: 4px solid #75616d;
+    box-shadow: 8px 8px 0 #14212ce6, 12px 12px 0 #92aaa15c;
+    font: 15px/1.7 ui-monospace, monospace;
+  }
+  .island-note h2 { margin: 0.5rem 0 1rem; font: bold 24px/1.3 ui-monospace, monospace; }
+  .island-note p { margin: 0; }
+  .island-note .island-note-body { margin-bottom: 0; }
+  .island-note .island-note-signature { margin-top: 1.4rem; text-align: right; }
+  .island-note .island-note-close { margin-top: 1.6rem; font-size: 10px; opacity: 0.65; }
+</style>
+
+<!-- how the rest of the page behaves while the island is on it. the walk
+     reports its phase as body[data-island]: rest, engaged, away, drifting -->
+<style is:global>
+  @media (min-width: 700px) {
+    body:has(.island) .home-intro { max-width: min(44vw, 38rem); }
+  }
+
+  body[data-island]:not([data-island="rest"]) .island-hint {
+    opacity: 0;
+  }
+
+  .home-intro {
+    transition: opacity 0.18s ease;
+  }
+
+  .vapor-word {
+    display: inline-block;
+    transition: opacity 0.65s ease, filter 0.85s ease, transform 0.85s cubic-bezier(0.22, 0.8, 0.3, 1);
+    transition-delay: var(--vapor-delay);
+  }
+
+  .home-intro a { text-decoration: none; }
+  .home-intro a .vapor-word { text-decoration: underline; text-underline-offset: 0.18em; }
+
+  body:is([data-island="engaged"], [data-island="away"]) .vapor-word {
+    opacity: 0;
+    filter: blur(9px);
+    transform: translateY(-2.2rem);
+  }
+
+  body[data-island]:is([data-island="engaged"], [data-island="away"]) .home-intro,
+  body[data-island]:is([data-island="engaged"], [data-island="away"]) .home-intro a {
+    pointer-events: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .vapor-word { transition: none; }
+    body:is([data-island="engaged"], [data-island="away"]) .vapor-word { opacity: 1; filter: none; transform: none; }
+    body:is([data-island="engaged"], [data-island="away"]) .home-intro { opacity: 0; }
+  }
+
+  /* let clicks fall through the copy layer to the canvas; links stay clickable */
+  body:has(.island) .site-main {
+    pointer-events: none;
+  }
+
+  body:has(.island) .site-main a {
+    pointer-events: auto;
+  }
+
+  /* the footer overlays the scene; a full-strength hairline cuts a hard
+     seam across the landscape, so fade the divider into the dark instead */
+  body:has(.island) .site-footer {
+    position: relative;
+    border-top-color: transparent;
+  }
+
+  body:has(.island) .site-footer::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 1px;
+    pointer-events: none;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(244, 239, 230, 0.1) 16%,
+      rgba(244, 239, 230, 0.16) 50%,
+      rgba(244, 239, 230, 0.1) 84%,
+      transparent
+    );
+  }
+</style>
+
+<script>
+  import { bootIsland } from "../../lib/art/island";
+
+  const canvas = document.querySelector<HTMLCanvasElement>("canvas.island-canvas");
+  if (canvas) bootIsland(canvas, document.querySelector<HTMLElement>(".island-note"));
+</script>

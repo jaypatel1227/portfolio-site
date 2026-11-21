@@ -1,21 +1,8 @@
 ---
 import Base from "../layouts/Base.astro";
-import { site, xSocial } from "../data/site";
+import HomeHero from "../components/HomeHero.astro";
 ---
 
-<Base>
-  <section class="home">
-    <div class="home-intro">
-      <p class="eyebrow">hello, folks</p>
-      <h1>jay pa<span class="name-dot" aria-hidden="true">.</span>tel</h1>
-      <p class="lede">{site.jobTitle.toLowerCase()}</p>
-      <p>
-        i work at <a href={site.employer.url} rel="noopener noreferrer">{site.employer.name.toLowerCase()}</a> in {site.location.city.toLowerCase()} / {site.location.region.toLowerCase()}.
-      </p>
-      <p>
-        {site.availability}
-        <a href={xSocial.url} rel="me noopener noreferrer">reach out on x!</a>
-      </p>
-    </div>
-  </section>
+<Base island>
+  <HomeHero />
 </Base>

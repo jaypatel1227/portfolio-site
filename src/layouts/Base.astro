@@ -1,5 +1,6 @@
 ---
 import "../styles/global.css";
+import Island from "../components/art/Island.astro";
 import {
   absUrl,
   jsonLdGraph,
@@ -15,6 +16,7 @@ interface Props {
   publishedTime?: Date | string;
   modifiedTime?: Date | string;
   jsonLd?: Record<string, unknown>[];
+  island?: boolean;
 }
 
 const {
@@ -25,6 +27,7 @@ const {
   publishedTime,
   modifiedTime,
   jsonLd = [],
+  island = false,
 } = Astro.props;
 
 const canonical = new URL(Astro.url.pathname, site.url).href;
@@ -101,6 +104,7 @@ const nav = [
     <script type="application/ld+json" set:html={JSON.stringify(schema)} />
   </head>
   <body class="font-hand min-h-dvh flex flex-col">
+    {island && <Island />}
     <a class="skip-link" href="#content">skip to the good part</a>
     <header class="site-header">
       <a class="wordmark" href="/">{site.siteName}</a>
