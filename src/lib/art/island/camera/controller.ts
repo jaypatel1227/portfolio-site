@@ -25,7 +25,12 @@ export function createCamera() {
       span.reset(rest.vertical);
       transition = { from: 0, to: 0, elapsed: CAMERA.transitionSeconds };
     },
-    resize(frame: RestFrame) { rest = frame; if (zoom === 0) span.reset(rest.vertical); },
+    resize(frame: RestFrame) {
+      rest = frame;
+      span.resize(rest.vertical);
+      if (zoom === 0 && transition.to === 0) span.reset(rest.vertical);
+      else if (transition.to === 0) span.transition(rest.vertical);
+    },
     transition(to: number, zooming = false) {
       if (transition.to === to) return;
       transition = { from: zoom, to, elapsed: 0 };

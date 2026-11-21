@@ -8,6 +8,12 @@ export function createZoom(initial: number) {
   return {
     get height() { return height; },
     reset(value: number) { height = target = value; transitioning = false; },
+    resize(rest: number) {
+      const nextHeight = clampZoom(height, rest), nextTarget = clampZoom(target, rest);
+      if (nextHeight === height && nextTarget === target && (!transitioning || clampZoom(from, rest) === from)) return;
+      height = nextHeight; target = nextTarget;
+      if (transitioning) { from = height; elapsed = 0; }
+    },
     hold() { target = height; transitioning = false; },
     transition(value: number) { from = height; target = value; elapsed = 0; transitioning = true; },
     magnify(exponent: number, rest: number) {

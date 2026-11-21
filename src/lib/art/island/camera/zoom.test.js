@@ -38,3 +38,33 @@ void it("reverses zoom immediately relative to the shown height, including durin
   zoom.reset(45); zoom.magnify(0, 45);
   assert.equal(zoom.update(1), 45);
 });
+
+void it("reconciles displayed and pending free zoom with resized limits without discarding an in-bounds choice", () => {
+  const zoom = createZoom(78);
+  zoom.resize(58);
+  assert.equal(zoom.height, 58);
+  zoom.magnify(0.1, 58);
+  for (let i = 0; i < 40; i++) assert.equal(zoom.update(0.05), 58);
+  zoom.reset(40); zoom.magnify(Math.log(2), 100);
+  zoom.update(0.05); zoom.resize(58);
+  assert.equal(zoom.update(100), 58);
+  zoom.reset(40); zoom.magnify(Math.log(1.25), 100);
+  const before = zoom.update(0.05);
+  zoom.resize(58);
+  assert.equal(zoom.height, before);
+  assert.equal(zoom.update(100), 50);
+  zoom.resize(90);
+  assert.equal(zoom.update(100), 50);
+});
+
+void it("rebases active transitions inside resized limits", () => {
+  for (const [initial, target] of [[78, 24], [40, 78]]) {
+    const zoom = createZoom(initial);
+    zoom.transition(target); zoom.update(0.2); zoom.resize(58);
+    for (let i = 0; i < 40; i++) {
+      const height = zoom.update(0.05);
+      assert.ok(height >= 6 && height <= 58);
+    }
+    assert.equal(zoom.height, Math.min(target, 58));
+  }
+});
