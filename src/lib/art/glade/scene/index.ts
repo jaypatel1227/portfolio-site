@@ -6,6 +6,7 @@ import { buildCathedral } from "./cathedral";
 import { BOUND_RADIUS, HOME, LOOK_AT, makeHeightAt } from "./layout";
 import type { NoteCopy } from "./note";
 import { createRuinsPost } from "./post";
+import { buildProps } from "./props";
 import { buildSky } from "./sky";
 import { buildTerrain } from "./terrain";
 
@@ -28,6 +29,7 @@ export function createGlade(seed: number, _note: NoteCopy): World {
   buildTerrain(scene, seed, heightAt);
   buildCathedral(scene, seed, collisions);
   buildCastle(scene, seed ^ 0xca57);
+  const props = buildProps(scene, seed, heightAt, collisions);
   return {
     scene,
     home: { x: HOME.x, z: HOME.z, lookAt: LOOK_AT },
@@ -35,6 +37,6 @@ export function createGlade(seed: number, _note: NoteCopy): World {
     collisions,
     heightAt,
     createPost: (renderer, camera) => createRuinsPost(renderer, scene, camera),
-    update({ camera, time }) { sky.update(camera, time); },
+    update({ camera, time }) { sky.update(camera, time); props.update(time); },
   };
 }

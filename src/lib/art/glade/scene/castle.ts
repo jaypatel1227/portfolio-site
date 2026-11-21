@@ -29,21 +29,25 @@ export function buildCastle(scene: THREE.Scene, seed: number): void {
   for (const [x, y, z] of [[-7, 20, -5.2], [3, 26, -6.6], [14, 15, 1.6]]) {
     box(group, lit, x, y, z, 0.42, 1.05, 0.1);
   }
-  const cragGeo = new THREE.CylinderGeometry(19, 36, 53, 13, 5);
+  const cragGeo = new THREE.CylinderGeometry(15, 32, 68, 15, 8, true);
   const pos = cragGeo.attributes.position;
   for (let i = 0; i < pos.count; i++) {
     const y = pos.getY(i);
     const a = Math.atan2(pos.getZ(i), pos.getX(i));
-    const jag = 1 + Math.sin(a * 7 + Math.floor(y / 9)) * 0.12;
-    pos.setXYZ(i, pos.getX(i) * jag, y, pos.getZ(i) * jag);
+    const jag = 1 + Math.sin(a * 7 + Math.floor(y / 9)) * 0.22 + Math.sin(a * 11) * 0.13;
+    pos.setXYZ(i, pos.getX(i) * jag, y + Math.sin(a * 9) * 2.2, pos.getZ(i) * jag);
   }
   cragGeo.computeVertexNormals();
-  const crag = new THREE.Mesh(cragGeo, new THREE.MeshStandardMaterial({ color: 0x252735, roughness: 1, flatShading: true }));
-  crag.position.y = -26.5;
+  const cliff = new THREE.MeshStandardMaterial({ color: 0x0d0f18, roughness: 1, flatShading: true });
+  const crag = new THREE.Mesh(cragGeo, cliff);
+  crag.position.y = -34;
   group.add(crag);
   for (let i = 0; i < 12; i++) {
-    const spur = new THREE.Mesh(new THREE.ConeGeometry(3 + rng() * 4, 13 + rng() * 10, 5), far);
-    spur.position.set(-24 + rng() * 48, -18 - rng() * 9, 5 + rng() * 10);
+    const height = 24 + rng() * 30;
+    const spur = new THREE.Mesh(new THREE.ConeGeometry(4 + rng() * 5, height, 5), cliff);
+    const angle = i / 12 * Math.PI * 2;
+    spur.position.set(Math.cos(angle) * (16 + rng() * 6), -28 + rng() * 7, Math.sin(angle) * 18);
+    spur.rotation.set((rng() - 0.5) * 0.3, rng() * 6, (rng() - 0.5) * 0.3);
     group.add(spur);
   }
   scene.add(group);

@@ -76,14 +76,15 @@ export function buildCathedral(scene: THREE.Scene, seed: number, collisions: Col
   ring(2.64, 0.22, 0, 11.1);
   ring(2.9, 0.12, 0, 11.1);
   ring(0.7, 0.12, 0, 11.1);
-  const glass = new THREE.Mesh(new THREE.CircleGeometry(2.5, 64, 0.18, TAU - 0.7), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.0, 0.25, 0.012), side: THREE.DoubleSide }));
+  const glass = new THREE.Mesh(new THREE.CircleGeometry(2.5, 64), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.0, 0.25, 0.012), side: THREE.DoubleSide }));
   glass.position.set(0, 11.1, 6.65);
   group.add(glass);
   for (let i = 0; i < 12; i++) {
     const a = (i / 12) * TAU;
-    const r = i === 2 || i === 3 ? 1.8 : 2.5;
+    const r = 2.5;
     beam(group, trim, new THREE.Vector3(Math.cos(a) * 0.7, 11.1 + Math.sin(a) * 0.7, 7.16), new THREE.Vector3(Math.cos(a) * r, 11.1 + Math.sin(a) * r, 7.16), 0.085);
-    if (i % 3 !== 0) ring(0.48, 0.065, Math.cos(a) * 1.75, 11.1 + Math.sin(a) * 1.75);
+    const opening = a + TAU / 24;
+    ring(0.36, 0.065, Math.cos(opening) * 1.78, 11.1 + Math.sin(opening) * 1.78);
   }
   const light = new THREE.PointLight(0xff9b3a, 80, 22, 2);
   light.position.set(0, 8.2, 8.5);

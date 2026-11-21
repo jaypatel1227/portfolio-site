@@ -42,8 +42,10 @@ void main() {
   col += vec3(0.55, 0.065, 0.012) * exp(-angle * angle * 36.0) * (0.4 + clouds * 0.6);
   float disk = 1.0 - smoothstep(0.118, 0.12, angle);
   float limb = sqrt(max(0.0, 1.0 - pow(angle / 0.12, 2.0)));
-  float surface = 0.88 + fbm(d.xz * 100.0) * 0.12;
-  col = mix(col, vec3(2.2, 0.21, 0.035) * (0.3 + limb * 0.7) * surface, disk);
+  float surface = 0.65 + fbm(d.xy * 72.0) * 0.35;
+  surface -= smoothstep(0.43, 0.72, fbm(d.xy * 36.0 + vec2(13.0, 7.0))) * 0.22;
+  float rim = smoothstep(0.096, 0.117, angle) * 0.17;
+  col = mix(col, vec3(1.35, 0.12, 0.024) * ((0.65 + limb * 0.25) * surface + rim), disk);
   float smoke = smoothstep(0.42, 0.86, wisps) * 0.55;
   col = mix(col, vec3(0.018, 0.02, 0.03), smoke);
   gl_FragColor = vec4(col, 1.0);
