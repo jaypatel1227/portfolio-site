@@ -15,7 +15,7 @@ export function buildSkyAccents(scene: THREE.Scene, seed: number): SkyAccentFiel
   const meteor = new THREE.Sprite(
     new THREE.SpriteMaterial({
       map: dot,
-      color: 0xdfe8ff,
+      color: 0xffdb59,
       transparent: true,
       opacity: 0,
       blending: THREE.AdditiveBlending,

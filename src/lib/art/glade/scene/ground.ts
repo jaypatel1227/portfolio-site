@@ -15,8 +15,8 @@ export function buildGround(
   const colors = new Float32Array(pos.count * 3);
   const noise = makeNoise(seed ^ 0x44ee);
   const c = new THREE.Color();
-  const moss = new THREE.Color(0x2c3f20);
-  const dirt = new THREE.Color(0x4a3a27);
+  const moss = new THREE.Color(0x37602c);
+  const dirt = new THREE.Color(0x9a742d);
   const stone = new THREE.Color(0x2a2b27);
 
   for (let i = 0; i < pos.count; i++) {

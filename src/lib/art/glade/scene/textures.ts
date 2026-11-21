@@ -51,7 +51,8 @@ export function makeMistTexture(): THREE.CanvasTexture {
       const d = Math.hypot(nx, ny);
       const wob = noise(x * 0.045, y * 0.045) * 0.11 + noise(x * 0.13, y * 0.13) * 0.04;
       const a = clamp((0.48 - d + wob) * 3.1, 0, 1);
-      const soft = Math.pow(a, 1.7);
+      const spiral = Math.atan2(ny, nx) * 3 + d * 42;
+      const soft = Math.pow(a, 1.7) * (0.45 + 0.55 * Math.pow(0.5 + 0.5 * Math.sin(spiral), 2));
       const i = (y * size + x) * 4;
       img.data[i] = 255;
       img.data[i + 1] = 255;
@@ -224,6 +225,21 @@ export function makePineTexture(seed: number, slender = false): THREE.CanvasText
     ctx.beginPath();
     ctx.moveTo(x0, y);
     ctx.lineTo(x0 + side * len, y + (rng() - 0.25) * 11);
+    ctx.stroke();
+  }
+
+  // Flame-shaped ribbons follow the crown.
+  for (let i = 0; i < 340; i++) {
+    const t = rng();
+    const y = bottom - t * span;
+    const half = Math.pow(1 - t, 0.85) * maxHalf;
+    const x = cx + (rng() - 0.5) * half * 1.7;
+    const len = 12 + rng() * 36;
+    ctx.strokeStyle = i % 5 === 0 ? "rgba(170,164,62,0.5)" : "rgba(28,83,54,0.8)";
+    ctx.lineWidth = 2 + rng() * 4;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.bezierCurveTo(x - 9, y - len * 0.3, x + 11, y - len * 0.7, x + 2, y - len);
     ctx.stroke();
   }
 
@@ -867,6 +883,17 @@ export function makeGroundTextures(seed: number): GroundTextures {
     ctx.fill();
   }
 
+  ctx.lineCap = "round";
+  for (let i = 0; i < 600; i++) {
+    const x = rng() * size;
+    const y = rng() * size;
+    ctx.strokeStyle = i % 3 === 0 ? "rgba(187,143,43,0.55)" : "rgba(48,92,52,0.55)";
+    ctx.lineWidth = 1 + rng() * 3;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.quadraticCurveTo(x + 6, y - 4, x + 14, y - 2);
+    ctx.stroke();
+  }
   const map = tex(cMap);
   map.wrapS = map.wrapT = THREE.RepeatWrapping;
   map.repeat.set(64, 64);
@@ -969,5 +996,16 @@ export function makeMoonTexture(seed: number): THREE.CanvasTexture {
   ctx.fillStyle = term;
   ctx.fillRect(0, 0, size, size);
   ctx.restore();
+  ctx.globalCompositeOperation = "source-atop";
+  ctx.lineCap = "round";
+  for (let i = 0; i < 480; i++) {
+    const a = rng() * TAU;
+    const r = Math.sqrt(rng()) * size * 0.5;
+    ctx.strokeStyle = i % 3 === 0 ? "#fff4ad" : i % 3 === 1 ? "#e8b62e" : "#f6db59";
+    ctx.lineWidth = 2 + rng() * 4;
+    ctx.beginPath();
+    ctx.arc(size / 2, size / 2, r, a, a + 0.1 + rng() * 0.3);
+    ctx.stroke();
+  }
   return tex(canvas);
 }

@@ -21,7 +21,7 @@ export function buildMist(scene: THREE.Scene, seed: number): MistRig {
       opacity: 0.016 + rng() * 0.026,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
-      color: i % 3 === 0 ? 0x8f8a7a : 0x556070,
+      color: i % 3 === 0 ? 0x8fa9df : 0x345dcc,
       fog: false,
     });
     const sprite = new THREE.Sprite(mat);
@@ -41,7 +41,7 @@ export function buildMist(scene: THREE.Scene, seed: number): MistRig {
       opacity: 0.02 + rng() * 0.018,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
-      color: 0x6d6a5f,
+      color: 0x779bda,
       fog: false,
     });
     const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), mat);

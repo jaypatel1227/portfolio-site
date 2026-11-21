@@ -1,8 +1,6 @@
 /**
- * "The Dark Glade": a dark forest at the far edge of everything. Rolling
- * hills, a fogged conifer field, a path leading to one enormous old tree,
- * a moonlit sky with faint stars, mist, fireflies. Nothing jumps, nothing
- * flashes.
+ * "The Painted Glade": ultramarine night, cypress strokes and golden
+ * stars. A quiet oil-painted path leads to one enormous old tree.
  */
 import * as THREE from "three";
 import type { Collision, World } from "../world";
@@ -22,18 +20,18 @@ import { buildSky } from "./sky";
 
 export function createGlade(seed: number, note: NoteCopy): World {
   const scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(0x131a25, 22, 132);
+  scene.fog = new THREE.Fog(0x14285d, 22, 132);
 
-  scene.add(new THREE.HemisphereLight(0x1e2c40, 0x070605, 0.48));
-  const moonLight = new THREE.DirectionalLight(0xa8bfe4, 1.05);
+  scene.add(new THREE.HemisphereLight(0x668add, 0x4b4318, 0.85));
+  const moonLight = new THREE.DirectionalLight(0xffdd80, 1.55);
   moonLight.position.set(-90, 120, 40);
   scene.add(moonLight);
-  const rim = new THREE.DirectionalLight(0x46587a, 0.3);
+  const rim = new THREE.DirectionalLight(0x547be0, 0.6);
   rim.position.set(60, 40, -90);
   scene.add(rim);
   // a soft moon bounce from behind the viewer, so the near grass and path
   // keep some shape instead of falling to pure black
-  const fill = new THREE.DirectionalLight(0xaab9d6, 0.13);
+  const fill = new THREE.DirectionalLight(0xe8ca66, 0.32);
   fill.position.set(14, 26, 42);
   scene.add(fill);
 

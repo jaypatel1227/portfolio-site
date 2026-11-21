@@ -78,7 +78,7 @@ export function buildFlora(
       roughness: 1,
       metalness: 0,
       color: 0xffffff,
-      emissive: 0x141d0e,
+      emissive: 0x263910,
       emissiveMap: map,
       emissiveIntensity: 0.3,
     });
@@ -549,7 +549,7 @@ export function buildFlora(
   capGeo.scale(1, 0.72, 1);
   const capMat = new THREE.MeshStandardMaterial({
     color: 0x0a1d1a,
-    emissive: 0x46e3c4,
+    emissive: 0xffd542,
     emissiveIntensity: 1.1,
     roughness: 0.5,
   });
@@ -590,7 +590,7 @@ export function buildFlora(
   shrooms.frustumCulled = false;
   scene.add(shrooms);
 
-  const shroomLight = new THREE.PointLight(0x3fd8c0, 4.5, 9, 2);
+  const shroomLight = new THREE.PointLight(0xffcf3d, 4.5, 9, 2);
   shroomLight.position.set(TREE_POS.x + 4.4, groundHeightAt(TREE_POS.x + 4.4, TREE_POS.z + 3.4) + 0.5, TREE_POS.z + 3.4);
   scene.add(shroomLight);
 
@@ -676,7 +676,7 @@ export function buildFlora(
       vertexColors: true,
       roughness: 0.88,
       metalness: 0,
-      color: 0xd8c8ae,
+      color: 0xe1b957,
       polygonOffset: true,
       polygonOffsetFactor: -2,
     })

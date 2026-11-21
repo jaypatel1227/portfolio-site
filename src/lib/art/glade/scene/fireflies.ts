@@ -17,7 +17,7 @@ void main() {
   vTint = aTint;
   vAlpha = 0.22 + 0.78 * pow(0.5 + 0.5 * sin(u_time * 1.1 + aTwinkle * 6.2831), 3.4);
   vec4 mv = modelViewMatrix * vec4(position, 1.0);
-  gl_PointSize = min(aSize * (240.0 / max(0.2, -mv.z)), 9.0);
+  gl_PointSize = min(aSize * (320.0 / max(0.2, -mv.z)), 12.0);
   gl_Position = projectionMatrix * mv;
 }
 `;
@@ -61,9 +61,9 @@ export function buildFireflies(scene: THREE.Scene, seed: number): FireflyField {
       tints[i * 3 + 1] = 0.78 + rng() * 0.16;
       tints[i * 3 + 2] = 0.34 + rng() * 0.2;
     } else {
-      tints[i * 3] = 0.48 + rng() * 0.2;
+      tints[i * 3] = 1.0;
       tints[i * 3 + 1] = 0.92;
-      tints[i * 3 + 2] = 0.82 + rng() * 0.15;
+      tints[i * 3 + 2] = 0.12 + rng() * 0.15;
     }
   }
 

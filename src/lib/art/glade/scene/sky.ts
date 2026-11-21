@@ -15,138 +15,51 @@ precision highp float;
 varying vec3 vDir;
 uniform float u_time;
 uniform float u_stars;
-
-float hash21(vec2 p) {
-  p = fract(p * vec2(123.34, 456.21));
-  p += dot(p, p + 45.32);
-  return fract(p.x * p.y);
-}
-
-float vnoise2(vec2 p) {
-  vec2 i = floor(p);
-  vec2 f = fract(p);
-  f = f * f * (3.0 - 2.0 * f);
-  float a = hash21(i);
-  float b = hash21(i + vec2(1.0, 0.0));
-  float c = hash21(i + vec2(0.0, 1.0));
-  float d = hash21(i + vec2(1.0, 1.0));
-  return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
-}
-
-float fbm2(vec2 p) {
-  float v = 0.0;
-  float a = 0.5;
-  for (int i = 0; i < 4; i++) {
-    v += a * vnoise2(p);
-    p = p * 2.03 + vec2(11.3, 7.7);
-    a *= 0.5;
-  }
-  return v;
-}
-
-vec3 starLayer(vec2 uv, float density, float cutoff, float scale, float twinkle) {
-  vec2 g = uv * density;
-  vec2 id = floor(g);
-  vec2 f = fract(g) - 0.5;
-  float rnd = hash21(id);
-  if (rnd < cutoff) return vec3(0.0);
-  vec2 off = (vec2(hash21(id + 1.7), hash21(id + 9.3)) - 0.5) * 0.74;
-  // the uv grid covers 2*pi of azimuth but only pi of elevation, so correct
-  // x to keep stars round instead of wide ovals
-  float d = length(vec2((f.x - off.x) * 2.0, f.y - off.y));
-  // pinpricks: keep the biggest stars a few pixels across, never blobs
-  float sz = (0.007 + pow(hash21(id + 3.1), 4.0) * 0.018) * scale;
-  float tw = 1.0 - twinkle + twinkle * (0.55 + 0.45 * sin(u_time * (0.6 + rnd * 2.4) + rnd * 62.0));
-  float s = smoothstep(sz, sz * 0.1, d) * tw;
-  float warm = hash21(id + 6.7);
-  vec3 tint = mix(vec3(0.66, 0.8, 1.0), vec3(1.0, 0.84, 0.64), warm);
-  tint = mix(tint, vec3(1.0), 0.28);
-  return tint * s * (0.5 + pow(hash21(id + 4.2), 2.0));
-}
-
+float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453); }
 void main() {
   vec3 dir = normalize(vDir);
-  float h = dir.y;
-  vec2 az = normalize(dir.xz + vec2(0.0001));
-
-  // deep blue-charcoal gradient, darker than before so the details carry it
-  vec3 zenith = vec3(0.0015, 0.003, 0.009);
-  vec3 upper = vec3(0.006, 0.010, 0.024);
-  vec3 horizon = vec3(0.028, 0.036, 0.049);
-  vec3 col = mix(horizon, upper, smoothstep(-0.02, 0.28, h));
-  col = mix(col, zenith, smoothstep(0.2, 0.9, h));
-
-  // moon azimuth: moon sits high to the west-northwest
-  vec2 moonAz = normalize(vec2(-0.4, -0.92));
-  vec2 awayAz = -moonAz;
-
-  // zodiacal light: a faint wedge of scattered moonlight rising along the
-  // ecliptic on the moon side, brightest low and fading with altitude
-  float zo = pow(max(dot(az, moonAz), 0.0), 3.0) * exp(-max(h, 0.0) * 3.6);
-  col += vec3(0.05, 0.048, 0.042) * zo;
-
-  // thin cirrus, combed out toward the moon: horizontal striations, not
-  // clouds, and never bright enough to soften the stars
-  float cirH = exp(-pow((h - 0.34) * 4.6, 2.0));
-  float cir = fbm2(vec2(dir.x * 1.9 + dir.z * 1.1 + u_time * 0.004, h * 14.0));
-  cir = smoothstep(0.52, 0.86, cir) * cirH;
-  float cirMoon = 0.5 + 0.5 * dot(az, moonAz);
-  col += mix(vec3(0.028, 0.03, 0.04), vec3(0.075, 0.07, 0.055), cirMoon) * cir * 0.75;
-
-  // a low aurora curtain on the far side, barely there: two drifting
-  // filaments, teal with a whisper of violet, folded by fbm
-  float asect = pow(max(dot(az, awayAz), 0.0), 2.6);
-  float awin = smoothstep(0.02, 0.12, h) * (1.0 - smoothstep(0.3, 0.62, h));
-  float aband = fbm2(vec2(dir.x * 3.1 + u_time * 0.011, dir.z * 3.1 - u_time * 0.007));
-  aband = pow(smoothstep(0.42, 0.9, aband), 2.2);
-  float afilament = sin(dir.x * 5.0 + aband * 9.0 + u_time * 0.05);
-  afilament = pow(0.5 + 0.5 * afilament, 3.0);
-  float aur = aband * afilament * asect * awin;
-  col += vec3(0.035, 0.085, 0.055) * aur * 0.8;
-  col += vec3(0.05, 0.035, 0.085) * aur * aur * 0.9;
-
-  // a faint warm breath over the great tree's side of the horizon
-  float warm = pow(max(dot(az, normalize(vec2(0.36, -0.93))), 0.0), 5.0) * exp(-max(h, 0.0) * 5.4);
-  col += vec3(0.13, 0.06, 0.02) * warm * 0.32;
-
-  // stars
-  vec2 suv = vec2(atan(dir.z, dir.x) / 6.2831853 + 0.5, asin(clamp(h, -1.0, 1.0)) / 3.1415926 + 0.5);
-  vec3 stars = vec3(0.0);
-  stars += starLayer(suv, 168.0, 0.8, 1.0, 0.7);
-  stars += starLayer(suv, 74.0, 0.88, 1.9, 0.55) * 1.5;
-  stars += starLayer(suv, 31.0, 0.94, 2.9, 0.35) * 2.6;
-
-  // one tight cluster, pleiades-like, high on the moon side: a knot of
-  // blue-white pinpricks in a breath of reflection nebulosity
-  vec3 cc = normalize(vec3(-0.52, 0.44, -0.73));
-  float cd = clamp(dot(dir, cc), 0.0, 1.0);
-  float cluster = smoothstep(0.9965, 0.9995, cd);
-  if (cluster > 0.001) {
-    vec3 upv = abs(cc.y) > 0.9 ? vec3(1.0, 0.0, 0.0) : vec3(0.0, 1.0, 0.0);
-    vec3 t1 = normalize(cross(upv, cc));
-    vec3 t2 = cross(cc, t1);
-    vec2 cuv = vec2(dot(dir, t1), dot(dir, t2));
-    // a fine dense scatter of faint members
-    stars += starLayer(cuv * 90.0 + 3.7, 1.0, 0.35, 0.5, 0.4) * 1.1 * cluster;
-    // nine bright named members on fixed offsets
-    for (int i = 0; i < 9; i++) {
-      float fi = float(i);
-      vec2 off = vec2(hash21(vec2(fi, 1.3)) - 0.5, hash21(vec2(fi, 7.9)) - 0.5) * 0.052;
-      float mag = 0.6 + pow(hash21(vec2(fi, 4.1)), 2.0) * 1.7;
-      float d = length(cuv - off);
-      float dwin = smoothstep(0.012, 0.0025, d);
-      stars += vec3(0.82, 0.88, 1.0) * dwin * mag * cluster;
-    }
-    // the sheen of the cluster's dust, brightest behind the members
-    col += vec3(0.022, 0.03, 0.045) * (exp(-pow(length(cuv) * 34.0, 2.0))) * cluster;
+  vec2 uv = vec2(atan(dir.z, dir.x), asin(clamp(dir.y, -1.0, 1.0)));
+  vec2 q = uv * vec2(1.7, 2.2);
+  float turn = u_time * 0.012;
+  vec2 warp = q;
+  for (int i = 0; i < 3; i++) {
+    vec2 center = vec2(float(i) * 2.8 - 2.7, 0.7 + sin(float(i) * 4.0) * 0.5);
+    vec2 d = q - center;
+    float r = length(d);
+    float a = 2.1 * exp(-r * 0.65) + turn;
+    warp += vec2(cos(a) * d.x - sin(a) * d.y, sin(a) * d.x + cos(a) * d.y) * exp(-r * 0.48);
   }
-
-  stars *= smoothstep(-0.06, 0.1, h);
-  col += stars * u_stars * 0.85;
-
-  // thin haze where the fog meets the treeline
-  col = mix(vec3(0.026, 0.032, 0.045), col, smoothstep(-0.09, 0.1, h));
-
+  float wave = warp.y * 12.0 + sin(warp.x * 2.5 + turn) * 3.0;
+  float bands = 0.5 + 0.5 * sin(wave);
+  vec2 eddy = q - vec2(-1.8, 1.35);
+  float radius = length(eddy);
+  float spiral = radius * 18.0 - atan(eddy.y, eddy.x) * 3.0 - turn;
+  float curl = exp(-radius * radius * 0.9);
+  bands = mix(bands, 0.5 + 0.5 * sin(spiral), curl);
+  float stroke = pow(0.5 + 0.5 * sin(wave * 3.0 + sin(warp.x * 32.0) * 0.35), 5.0);
+  stroke = mix(stroke, pow(0.5 + 0.5 * sin(spiral * 3.0), 5.0), curl);
+  float broken = 0.65 + 0.35 * sin(warp.x * 75.0 + warp.y * 9.0);
+  vec3 col = mix(vec3(0.006,0.016,0.085), vec3(0.035,0.16,0.42), bands * 0.8);
+  col += vec3(0.09,0.20,0.25) * stroke * broken * 0.65;
+  col *= mix(0.6, 1.0, smoothstep(-0.15, 0.3, dir.y));
+  vec2 grid = uv * vec2(7.0, 5.0);
+  vec2 id = floor(grid);
+  vec2 f = fract(grid) - 0.5;
+  vec2 off = (vec2(hash(id),hash(id+7.1))-0.5)*0.5;
+  float r = length((f-off)*vec2(max(0.22,cos(uv.y)),1.4));
+  float seed = hash(id+19.0);
+  if (seed > 0.65 && dir.y > 0.04) {
+    float radius = 0.065 + seed * 0.025;
+    float core = smoothstep(radius, radius * 0.5, r);
+    float halo = exp(-r * 9.0);
+    float rings = pow(0.5 + 0.5 * sin(r * 120.0 + sin(atan(f.y-off.y,f.x-off.x)*7.0)*0.4), 3.0);
+    col = mix(col, vec3(0.25,0.43,0.62), halo * rings * 0.5);
+    col += vec3(0.8,0.57,0.08) * halo * rings * 0.65;
+    col = mix(col, vec3(1.5,1.12,0.22), core * u_stars);
+  }
+  float moon = acos(clamp(dot(dir, normalize(vec3(-92.0,92.0,-212.0))), -1.0, 1.0));
+  float rings = pow(0.5 + 0.5 * sin(moon * 270.0), 3.0);
+  col += mix(vec3(0.09,0.24,0.5),vec3(0.7,0.57,0.1),rings) * exp(-moon*12.0) * 0.8;
   gl_FragColor = vec4(col, 1.0);
 }
 `;
@@ -183,7 +96,7 @@ export function buildSky(scene: THREE.Scene, seed: number): SkyRig {
   const halo = new THREE.Sprite(
     new THREE.SpriteMaterial({
       map: dot,
-      color: 0xb8c6e2,
+      color: 0xf4cb50,
       transparent: true,
       opacity: 0.12,
       blending: THREE.AdditiveBlending,

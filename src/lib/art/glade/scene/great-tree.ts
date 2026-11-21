@@ -89,9 +89,9 @@ void main() {
   vec3 q = vec3(vWorld.x * 1.6, vWorld.y * 0.26, vWorld.z * 1.6);
   float fine = fbm(vec3(vWorld.x * 6.0, vWorld.y * 0.9, vWorld.z * 6.0) + 9.0);
 
-  vec3 c1 = vec3(0.006, 0.006, 0.005); // deep pore
-  vec3 c2 = vec3(0.048, 0.046, 0.039); // bark body, cool and damp
-  vec3 c3 = vec3(0.088, 0.086, 0.075); // moonlit ridge
+  vec3 c1 = vec3(0.004, 0.012, 0.009); // deep pore
+  vec3 c2 = vec3(0.055, 0.082, 0.027); // bark body
+  vec3 c3 = vec3(0.24, 0.19, 0.055); // golden ridge
 
   vec3 bark = mix(c1, c2, 0.32 + 0.68 * grain);
   bark = mix(bark, c3, smoothstep(0.46, 0.94, flute) * 0.46);
@@ -123,7 +123,7 @@ void main() {
   float sky = 0.5 + 0.5 * n.y;
   bark *= 0.28 + ndl * 0.72 + sky * 0.18;
   float rim = pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 2.5);
-  bark += vec3(0.2, 0.3, 0.48) * rim * 0.26;
+  bark += vec3(0.6, 0.43, 0.12) * rim * 0.26;
 
   gl_FragColor = vec4(bark, 1.0);
   #include <fog_fragment>

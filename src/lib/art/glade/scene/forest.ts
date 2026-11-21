@@ -89,7 +89,7 @@ export function buildTrees(
       color: 0xffffff,
       // a whisper of cool sky-light keeps the nearest silhouettes from
       // crushing to pure black and losing their bough detail
-      emissive: 0x0c161d,
+      emissive: 0x082219,
       emissiveIntensity: 0.42,
     });
   };
@@ -116,7 +116,7 @@ export function buildTrees(
       const far = clamp(dist / 110, 0, 1);
       col.setHSL(
         0.26 + rng() * 0.055,
-        (0.15 + rng() * 0.15) * (1 - far * 0.55),
+        (0.5 + rng() * 0.2) * (1 - far * 0.35),
         0.27 + far * 0.25 + rng() * 0.1
       );
       mesh.setColorAt(i, col);
