@@ -1,4 +1,4 @@
-import { model, voxel, type VoxelModel } from "./slices";
+import { model, voxel, type VoxelModel } from "./grid";
 
 export type DetailKind = "oak" | "cabin" | "pine" | "rock" | "ground" | "pond";
 

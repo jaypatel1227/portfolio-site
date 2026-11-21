@@ -1,21 +1,14 @@
+import { smallPlaces } from "./places";
+import type { Batch } from "../voxel/batch";
 import * as THREE from "three";
-import { random, type Point } from "./math";
-import { PALETTE, mushroom, rock } from "./models";
-import { fill, model, type VoxelModel } from "./slices";
+import { type Point } from "../math";
+import { PALETTE } from "../models/palette";
+import { mushroom } from "../models/flora";
+import { rock } from "../models/rock";
+import { fill, model, type VoxelModel } from "../voxel/grid";
 
 const COLORS = [...PALETTE, "#c94c54", "#f1ead8", "#273d50", "#79a66a"];
-export function smallPlaces(seed: number) {
-  const rng = random(seed + 819);
-  return {
-    mailbox: { x: 12.2, z: 1.2 }, snail: { x: -10.4, z: -3.6 }, ring: { x: -8.9, z: 2.1 },
-    carving: { x: 2.4, z: -4.08 }, cat: { x: 10.5, z: 2.14 }, door: { x: 3.1, z: -3.18 },
-    boot: { x: -2.4, z: 9.1 }, camp: { x: 8.1, z: -6.0 }, frog: { x: -10.2, z: 0.5 },
-    bottle: { x: -4.7, z: -1.4 }, circle: { x: -8.1, z: -7.1 },
-    hiker: { x: -6.4 + rng() * 0.6, z: -9.5 + rng() * 0.5 },
-  };
-}
-
-export function createSmallProps(seed: number, batch: (m: VoxelModel, spots: { x: number; z: number; scale: number; y?: number; angle?: number }[], palette?: readonly string[]) => THREE.InstancedMesh, sky: THREE.Group) {
+export function createSmallProps(seed: number, batch: Batch, sky: THREE.Group) {
   const places = smallPlaces(seed), meshes: THREE.InstancedMesh[] = [];
   const make = (width: number, height: number, depth: number, sample: (x: number, y: number, z: number) => number) => {
     const m = model(width, height, depth); fill(m, sample); return m;

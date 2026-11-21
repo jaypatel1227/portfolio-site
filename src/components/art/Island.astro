@@ -40,13 +40,11 @@ import { islandNote } from "../../data/site";
     transition: opacity 0.6s ease;
   }
 
-  /* a still frame never intercepts scrolling or taps */
   .island-canvas[data-walkable] {
     pointer-events: auto;
     cursor: grab;
   }
 
-  /* settle the edges so the hero copy always sits in calm air */
   .island-vignette {
     position: absolute;
     inset: 0;
@@ -71,7 +69,6 @@ import { islandNote } from "../../data/site";
     transition: opacity 0.7s ease;
   }
 
-  /* the walk is offered on the same terms the script uses: see lib/art/island/boot.ts */
   @media (max-width: 63.99rem), (prefers-reduced-motion: reduce) {
     .island-hint {
       display: none;
@@ -111,9 +108,70 @@ import { islandNote } from "../../data/site";
   .island-note .island-note-close { margin-top: 1.6rem; font-size: 10px; opacity: 0.65; }
 </style>
 
-<!-- how the rest of the page behaves while the island is on it. the walk
-     reports its phase as body[data-island]: rest, engaged, away, drifting -->
 <style is:global>
+  body:has(.island) :is(.site-header, .site-footer, .site-main) { position: relative; z-index: 1; }
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(0.85rem);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  body:has(.island) .site-header {
+    animation: fade-in 0.9s ease both;
+  }
+
+  body:has(.island) .site-footer {
+    animation: fade-in 1.1s ease 0.35s both;
+  }
+
+  body:has(.island) .home-intro > * {
+    animation: rise 0.85s cubic-bezier(0.22, 0.8, 0.3, 1) both;
+  }
+
+  body:has(.island) .home-intro > :nth-child(1) { animation-delay: 0.05s; }
+  body:has(.island) .home-intro > :nth-child(2) { animation-delay: 0.14s; }
+  body:has(.island) .home-intro > :nth-child(3) { animation-delay: 0.24s; }
+  body:has(.island) .home-intro > :nth-child(4) { animation-delay: 0.34s; }
+  body:has(.island) .home-intro > :nth-child(5) { animation-delay: 0.44s; }
+
+  /* the accent dot breathes, slowly */
+  @keyframes dot-breathe {
+    0%,
+    100% {
+      text-shadow: 0 0 0 rgba(242, 182, 76, 0);
+    }
+    50% {
+      text-shadow: 0 0 0.7rem rgba(242, 182, 76, 0.35);
+    }
+  }
+
+  body:has(.island) .name-dot {
+    animation: dot-breathe 5s ease-in-out 1.2s infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    body:has(.island) .site-header,
+    body:has(.island) .site-footer,
+    body:has(.island) .home-intro > *,
+    body:has(.island) .name-dot {
+      animation: none;
+    }
+  }
+
   @media (min-width: 700px) {
     body:has(.island) .home-intro { max-width: min(44vw, 38rem); }
   }
@@ -152,7 +210,6 @@ import { islandNote } from "../../data/site";
     body:is([data-island="engaged"], [data-island="away"]) .home-intro { opacity: 0; }
   }
 
-  /* let clicks fall through the copy layer to the canvas; links stay clickable */
   body:has(.island) .site-main {
     pointer-events: none;
   }
@@ -161,8 +218,6 @@ import { islandNote } from "../../data/site";
     pointer-events: auto;
   }
 
-  /* the footer overlays the scene; a full-strength hairline cuts a hard
-     seam across the landscape, so fade the divider into the dark instead */
   body:has(.island) .site-footer {
     position: relative;
     border-top-color: transparent;
@@ -186,8 +241,11 @@ import { islandNote } from "../../data/site";
 </style>
 
 <script>
-  import { bootIsland } from "../../lib/art/island";
+  import { bootIsland } from "../../lib/art/island/boot";
 
   const canvas = document.querySelector<HTMLCanvasElement>("canvas.island-canvas");
-  if (canvas) bootIsland(canvas, document.querySelector<HTMLElement>(".island-note"));
+  if (canvas) {
+    const dispose = bootIsland(canvas, document.querySelector<HTMLElement>(".island-note"));
+    import.meta.hot?.dispose(dispose);
+  }
 </script>

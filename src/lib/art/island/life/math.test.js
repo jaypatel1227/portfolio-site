@@ -1,7 +1,7 @@
 import { it } from "node:test";
 import assert from "node:assert/strict";
-import { cycle, fishJump, critterTarget } from "./life-math.ts";
-import { fish, fox, owl, rabbit } from "./creatures.ts";
+import { cycle, fishJump, critterTarget } from "./math.ts";
+import { fish, fox, owl, rabbit } from "../models/animals.ts";
 
 void it("cycles predictably and gives jumping fish a bounded arc with a resting interval", () => {
   assert.equal(cycle(0, 9), 0); assert.equal(cycle(18, 9), 0);

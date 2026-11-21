@@ -1,4 +1,4 @@
-import { type Point } from "./math";
+import { type Point } from "../math";
 
 export function cycle(time: number, duration: number): number { return ((time % duration) + duration) % duration / duration; }
 

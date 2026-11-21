@@ -1,4 +1,4 @@
-import { fill, model } from "./slices";
+import { fill, model } from "../voxel/grid";
 
 export function fox() {
   const m = model(27, 19, 13);

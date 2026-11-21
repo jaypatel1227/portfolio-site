@@ -1,8 +1,11 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import * as THREE from "three";
-import { bakeStack, fill, model, pixelTexture, voxel } from "./slices.ts";
-import { greatTree, pine, rock } from "./models.ts";
+import { bakeStack, pixelTexture } from "./bake.ts";
+import { fill, model, voxel } from "./grid.ts";
+import { greatTree } from "../models/oak.ts";
+import { pine } from "../models/pine.ts";
+import { rock } from "../models/rock.ts";
 
 void describe("voxel models", () => {
   void it("rejects invalid grid dimensions", () => {

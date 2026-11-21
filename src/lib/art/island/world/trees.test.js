@@ -1,6 +1,6 @@
 import { it } from "node:test";
 import assert from "node:assert/strict";
-import { movePlayer, random } from "./math.ts";
+import { movePlayer, random } from "../math.ts";
 import { pineSpots, pineObstacles } from "./trees.ts";
 
 void it("blocks every rendered pine, including all three foreground trees", () => {

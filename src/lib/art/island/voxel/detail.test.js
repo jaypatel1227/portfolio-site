@@ -1,8 +1,8 @@
 import { it } from "node:test";
 import assert from "node:assert/strict";
-import { detailModel } from "./detail-models.ts";
-import { fill, model } from "./slices.ts";
-import { smallPlaces } from "./props.ts";
+import { detailModel } from "./detail.ts";
+import { fill, model } from "./grid.ts";
+import { smallPlaces } from "../details/places.ts";
 
 void it("doubles voxel density deterministically while adding material detail", () => {
   const base = model(7, 8, 7); fill(base, () => 3);

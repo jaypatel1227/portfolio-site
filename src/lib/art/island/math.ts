@@ -1,3 +1,5 @@
+import { PLAYER } from "./config";
+
 export interface Point { x: number; z: number }
 export interface Obstacle extends Point { r: number }
 
@@ -20,7 +22,7 @@ export function relativeMove(forward: number, strafe: number, yaw: number): Poin
 
 export function movePlayer(from: Point, delta: Point, obstacles: readonly Obstacle[], radius: number): Point {
   const next = { ...from };
-  const body = 0.34;
+  const body = PLAYER.radius;
   const steps = obstacles.length ? Math.max(1, Math.ceil(Math.hypot(delta.x, delta.z) / (body / 2))) : 1;
   for (let step = 0; step < steps; step++) {
     next.x += delta.x / steps; next.z += delta.z / steps;
