@@ -8,8 +8,8 @@ import { TAU, makeNoise } from "../math";
  */
 export function buildRidge(scene: THREE.Scene, seed: number): void {
   const layers = [
-    { radius: 150, height: 24, base: 0x211919, top: 0x49312c, haze: 0.9 },
-    { radius: 96, height: 13, base: 0x191414, top: 0x352726, haze: 0.55 },
+    { radius: 150, height: 24, base: 0x1e1f28, top: 0x41414e, haze: 0.9 },
+    { radius: 96, height: 13, base: 0x15161c, top: 0x2c2e3a, haze: 0.55 },
   ];
   const noise = makeNoise(seed ^ 0x51dd);
   const noise2 = makeNoise(seed ^ 0x77c1);

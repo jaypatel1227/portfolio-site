@@ -21,18 +21,18 @@ import { buildSky } from "./sky";
 
 export function createGlade(seed: number, note: NoteCopy): World {
   const scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(0x392a29, 16, 112);
+  scene.fog = new THREE.Fog(0x30313d, 16, 112);
 
-  scene.add(new THREE.HemisphereLight(0x635761, 0x17100d, 0.65));
-  const moonLight = new THREE.DirectionalLight(0xe89b62, 0.85);
+  scene.add(new THREE.HemisphereLight(0x747985, 0x070609, 0.65));
+  const moonLight = new THREE.DirectionalLight(0xc58b77, 0.55);
   moonLight.position.set(-90, 120, 40);
   scene.add(moonLight);
-  const rim = new THREE.DirectionalLight(0x8b6250, 0.4);
+  const rim = new THREE.DirectionalLight(0x737d9c, 0.45);
   rim.position.set(60, 40, -90);
   scene.add(rim);
   // a soft moon bounce from behind the viewer, so the near grass and path
   // keep some shape instead of falling to pure black
-  const fill = new THREE.DirectionalLight(0xc4aa83, 0.28);
+  const fill = new THREE.DirectionalLight(0x8d91aa, 0.18);
   fill.position.set(14, 26, 42);
   scene.add(fill);
 

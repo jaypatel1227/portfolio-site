@@ -69,27 +69,27 @@ void main() {
   float h = dir.y;
   vec2 az = normalize(dir.xz + vec2(0.0001));
 
-  vec3 zenith = vec3(0.009, 0.006, 0.009);
-  vec3 upper = vec3(0.038, 0.019, 0.023);
-  vec3 horizon = vec3(0.18, 0.065, 0.033);
+  vec3 zenith = vec3(0.006, 0.008, 0.013);
+  vec3 upper = vec3(0.017, 0.02, 0.03);
+  vec3 horizon = vec3(0.038, 0.033, 0.045);
   vec3 col = mix(horizon, upper, smoothstep(-0.02, 0.28, h));
   col = mix(col, zenith, smoothstep(0.2, 0.9, h));
 
   // scattered ember light through the smoke
-  vec2 moonAz = normalize(vec2(-0.4, -0.92));
+  vec2 moonAz = normalize(vec2(-0.12, -1.0));
   vec2 awayAz = -moonAz;
 
   // zodiacal light: a faint wedge of scattered moonlight rising along the
   // ecliptic on the moon side, brightest low and fading with altitude
-  float zo = pow(max(dot(az, moonAz), 0.0), 3.0) * exp(-max(h, 0.0) * 3.6);
-  col += vec3(0.12, 0.035, 0.009) * zo;
+  float zo = pow(max(dot(az, moonAz), 0.0), 12.0) * exp(-pow((h - 0.05) * 5.0, 2.0));
+  col += vec3(0.16, 0.022, 0.012) * zo;
 
   // smoke combed toward the moon
   float cirH = exp(-pow((h - 0.34) * 4.6, 2.0));
   float cir = fbm2(vec2(dir.x * 1.9 + dir.z * 1.1 + u_time * 0.004, h * 14.0));
   cir = smoothstep(0.52, 0.86, cir) * cirH;
   float cirMoon = 0.5 + 0.5 * dot(az, moonAz);
-  col += mix(vec3(0.04, 0.024, 0.027), vec3(0.17, 0.07, 0.035), cirMoon) * cir * 1.4;
+  col += mix(vec3(0.028, 0.032, 0.046), vec3(0.07, 0.035, 0.04), cirMoon) * cir * 0.8;
 
   // drifting smoke filaments on the far side
   float asect = pow(max(dot(az, awayAz), 0.0), 2.6);
@@ -99,12 +99,12 @@ void main() {
   float afilament = sin(dir.x * 5.0 + aband * 9.0 + u_time * 0.05);
   afilament = pow(0.5 + 0.5 * afilament, 3.0);
   float aur = aband * afilament * asect * awin;
-  col += vec3(0.07, 0.028, 0.02) * aur * 0.8;
-  col += vec3(0.07, 0.025, 0.02) * aur * aur * 0.9;
+  col += vec3(0.028, 0.03, 0.042) * aur * 0.8;
+  col += vec3(0.025, 0.028, 0.04) * aur * aur * 0.9;
 
   // a faint warm breath over the great tree's side of the horizon
   float warm = pow(max(dot(az, normalize(vec2(0.36, -0.93))), 0.0), 5.0) * exp(-max(h, 0.0) * 5.4);
-  col += vec3(0.13, 0.06, 0.02) * warm * 0.32;
+  col += vec3(0.09, 0.032, 0.014) * warm * 0.2;
 
   // stars
   vec2 suv = vec2(atan(dir.z, dir.x) / 6.2831853 + 0.5, asin(clamp(h, -1.0, 1.0)) / 3.1415926 + 0.5);
@@ -142,7 +142,7 @@ void main() {
   col += stars * u_stars * 0.85;
 
   // thin haze where the fog meets the treeline
-  col = mix(vec3(0.09, 0.052, 0.042), col, smoothstep(-0.09, 0.1, h));
+  col = mix(vec3(0.034, 0.033, 0.044), col, smoothstep(-0.09, 0.1, h));
 
   gl_FragColor = vec4(col, 1.0);
 }
@@ -182,7 +182,7 @@ export function buildSky(scene: THREE.Scene, seed: number): SkyRig {
       map: dot,
       color: 0xc74318,
       transparent: true,
-      opacity: 0.3,
+      opacity: 0.55,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       depthTest: false,
@@ -190,7 +190,7 @@ export function buildSky(scene: THREE.Scene, seed: number): SkyRig {
     })
   );
   halo.position.copy(moon.position);
-  halo.scale.setScalar(140);
+  halo.scale.setScalar(180);
   halo.renderOrder = -9;
   scene.add(halo);
 
@@ -199,7 +199,7 @@ export function buildSky(scene: THREE.Scene, seed: number): SkyRig {
       map: dot,
       color: 0xff681f,
       transparent: true,
-      opacity: 0.2,
+      opacity: 0.32,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       depthTest: false,
@@ -207,7 +207,7 @@ export function buildSky(scene: THREE.Scene, seed: number): SkyRig {
     })
   );
   innerHalo.position.copy(moon.position);
-  innerHalo.scale.setScalar(34);
+  innerHalo.scale.setScalar(82);
   innerHalo.renderOrder = -8;
   scene.add(innerHalo);
 

@@ -36,10 +36,10 @@ const GradeShader = {
 
       // ash midtones, wine-black shadows and burnished highlights
       float l = dot(col, vec3(0.2126, 0.7152, 0.0722));
-      col = mix(vec3(l), col, 0.72);
-      col *= vec3(1.09, 0.94, 0.79);
-      col = max(vec3(0.0), col - 0.003);
-      col = mix(col, col * vec3(1.16, 1.03, 0.82), smoothstep(0.24, 1.0, l) * 0.6);
+      float warm = smoothstep(0.025, 0.2, col.r - col.b);
+      col = mix(vec3(l), col, mix(0.65, 1.0, warm));
+      col *= mix(vec3(0.88, 0.95, 1.13), vec3(1.04, 0.99, 0.92), warm);
+      col = max(vec3(0.0), col - 0.0045);
       col = clamp(col, 0.0, 1.0);
 
       // very fine grain, keeps the fog from banding

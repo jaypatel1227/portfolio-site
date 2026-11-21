@@ -934,21 +934,21 @@ export function makeMoonTexture(seed: number): THREE.CanvasTexture {
   }
 
   // craters
-  for (let i = 0; i < 130; i++) {
+  for (let i = 0; i < 38; i++) {
     const x = rng() * size;
     const y = rng() * size;
-    const r = 1 + Math.pow(rng(), 2.4) * 14;
+    const r = 1 + Math.pow(rng(), 2.4) * 9;
     const shade = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, 0, x, y, r);
-    shade.addColorStop(0, "rgba(255, 252, 240, 0.3)");
-    shade.addColorStop(0.55, "rgba(120, 112, 98, 0.4)");
-    shade.addColorStop(0.9, "rgba(90, 84, 72, 0.22)");
-    shade.addColorStop(1, "rgba(226, 218, 200, 0.14)");
+    shade.addColorStop(0, "rgba(255, 252, 240, 0.06)");
+    shade.addColorStop(0.55, "rgba(120, 112, 98, 0.09)");
+    shade.addColorStop(0.9, "rgba(90, 84, 72, 0.03)");
+    shade.addColorStop(1, "rgba(226, 218, 200, 0)");
     ctx.fillStyle = shade;
     ctx.beginPath();
     ctx.arc(x, y, r, 0, TAU);
     ctx.fill();
     if (r > 3) {
-      ctx.strokeStyle = "rgba(255, 250, 238, 0.2)";
+      ctx.strokeStyle = "rgba(255, 250, 238, 0.025)";
       ctx.lineWidth = 0.7;
       ctx.beginPath();
       ctx.arc(x, y, r * 0.92, 0, TAU);

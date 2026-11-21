@@ -123,9 +123,15 @@ void main() {
   float sky = 0.5 + 0.5 * n.y;
   bark *= 0.28 + ndl * 0.72 + sky * 0.18;
   float rim = pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 2.5);
-  bark += vec3(0.48, 0.25, 0.06) * rim * 0.4;
-  float vein = pow(smoothstep(0.68, 0.94, flute), 3.0);
-  bark += vec3(1.05, 0.34, 0.025) * vein * (0.35 + 0.65 * grain2);
+  bark *= vec3(0.5, 0.4, 0.34);
+  bark += vec3(0.035, 0.032, 0.045) * rim;
+  float warp = sin(o.y * 0.72 + ang * 2.0) * 0.8 + noise3(vec3(cs * 4.0, o.y * 0.3)) * 2.0;
+  float fissure = sin(ang * 7.0 + warp);
+  float fork = sin(ang * 11.0 + warp * 1.5 + o.y * 0.65);
+  float vein = 1.0 - smoothstep(0.025, 0.025 + fwidth(fissure), abs(fissure));
+  vein += (1.0 - smoothstep(0.012, 0.012 + fwidth(fork), abs(fork))) * smoothstep(0.48, 0.65, grain);
+  float sap = exp(-max(o.y, 0.0) * 0.12);
+  bark += vec3(2.4, 0.72, 0.018) * vein * sap;
 
   gl_FragColor = vec4(bark, 1.0);
   #include <fog_fragment>
@@ -169,6 +175,7 @@ const FOLIAGE_FRAG = /* glsl */ `
 #include <fog_pars_fragment>
 uniform sampler2D u_map;
 uniform float u_alphaTest;
+uniform vec3 u_crownCenter;
 varying vec2 vUv;
 varying vec3 vWorld;
 varying vec3 vNormalW;
@@ -187,20 +194,17 @@ void main() {
   float wrapped = clamp(dot(n, L) * 0.5 + 0.5, 0.0, 1.0);
   wrapped = pow(wrapped, 1.35);
 
-  // moonlight bleeding through the leaf from behind
-  float back = pow(clamp(dot(-v, L), 0.0, 1.0), 2.4);
-  vec3 transmit = vec3(0.28, 0.38, 0.17) * back * 0.4;
-
-  float rim = pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 2.2);
-
-  // leaf albedo, lifted out of the near-black so the crown reads as foliage
+  vec3 radial = normalize(vWorld - u_crownCenter);
+  float shell = smoothstep(2.0, 10.0, length(vWorld - u_crownCenter));
+  float rim = pow(1.0 - abs(dot(radial, v)), 3.0);
+  float light = max(dot(radial, L), 0.0);
   vec3 leaf = texel.rgb * vTint;
   float gold = dot(leaf, vec3(0.3, 0.6, 0.1));
-  vec3 col = vec3(0.9, 0.36, 0.035) * (0.12 + gold * 2.8) * (0.35 + wrapped * 0.65);
-  col += leaf * transmit;
-  // moonlight catching the sky-facing leaves and the silhouette edge
-  col += vec3(0.6, 0.25, 0.025) * rim * 0.5;
-  col += vec3(0.15, 0.065, 0.008) * max(n.y, 0.0);
+  float detail = pow(clamp(gold * 5.0, 0.0, 1.0), 1.8);
+  vec3 col = mix(vec3(0.025, 0.009, 0.003), vec3(1.4, 0.45, 0.008), detail);
+  col *= 0.12 + shell * (0.22 + light * 0.8) + wrapped * 0.08;
+  float edge = (1.0 - smoothstep(u_alphaTest, 0.85, texel.a)) * shell;
+  col += vec3(1.3, 0.48, 0.012) * (rim * shell * 0.85 + edge * 0.65) * (0.25 + detail);
 
   gl_FragColor = vec4(col, 1.0);
   #include <fog_fragment>
@@ -217,6 +221,7 @@ function makeFoliageMaterial(
     {
       u_map: { value: null as THREE.Texture | null },
       u_alphaTest: { value: alphaTest },
+      u_crownCenter: { value: new THREE.Vector3(TREE_POS.x, 14, TREE_POS.z) },
     },
   ]) as Record<string, THREE.IUniform>;
   uniforms.u_map.value = map;

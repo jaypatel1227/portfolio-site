@@ -86,10 +86,10 @@ export function buildTrees(
       side: THREE.DoubleSide,
       roughness: 1,
       metalness: 0,
-      color: 0xb6a18a,
+      color: 0xaaa8af,
       // a whisper of cool sky-light keeps the nearest silhouettes from
       // crushing to pure black and losing their bough detail
-      emissive: 0x1d1411,
+      emissive: 0x11131b,
       emissiveIntensity: 0.42,
     });
   };
