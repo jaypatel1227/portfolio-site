@@ -16,10 +16,7 @@ import { islandNote } from "../../data/site";
 </p>
 
 <aside class="island-note" aria-label="note pinned to the old tree" hidden>
-  <h2>{islandNote.title}</h2>
-  <p class="island-note-body">{islandNote.lines.join(" ")}</p>
-  <p class="island-note-signature">{islandNote.signature}</p>
-  <p class="island-note-close">walk away to close</p>
+  <p>{islandNote}</p>
 </aside>
 
 <style>
@@ -101,11 +98,7 @@ import { islandNote } from "../../data/site";
     box-shadow: 8px 8px 0 #14212ce6, 12px 12px 0 #92aaa15c;
     font: 15px/1.7 ui-monospace, monospace;
   }
-  .island-note h2 { margin: 0.5rem 0 1rem; font: bold 24px/1.3 ui-monospace, monospace; }
   .island-note p { margin: 0; }
-  .island-note .island-note-body { margin-bottom: 0; }
-  .island-note .island-note-signature { margin-top: 1.4rem; text-align: right; }
-  .island-note .island-note-close { margin-top: 1.6rem; font-size: 10px; opacity: 0.65; }
 </style>
 
 <style is:global>
