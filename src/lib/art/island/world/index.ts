@@ -11,7 +11,7 @@ import { pineSpots, pineObstacles } from "./trees";
 import { random, type Obstacle } from "../math";
 import { bakeStack } from "../voxel/bake";
 import { fill, model } from "../voxel/grid";
-import { PALETTE } from "../models/palette";
+import { PALETTE, CHARACTER_PALETTE } from "../models/palette";
 import { island } from "../models/ground";
 import { pine } from "../models/pine";
 import { greatTree } from "../models/oak";
@@ -19,7 +19,10 @@ import { cabin } from "../models/cabin";
 import { rock } from "../models/rock";
 import { lantern, sign } from "../models/props";
 import { mushroom, grass } from "../models/flora";
-import { character } from "../models/character";
+import { characterParts, CHARACTER_SCALE, type CharacterPart } from "../models/character";
+import { createClouds } from "../life/clouds";
+import { createAvatar } from "../life/avatar";
+import type { Frame } from "../life/types";
 
 export { HOME, NOTE } from "./layout";
 
@@ -31,6 +34,7 @@ export function createWorld(seed: number) {
   const obstacles: Obstacle[] = [{ x: 2, z: -5, r: 1.15 }, { x: 10, z: -1, r: 2.35 }, { x: -8, z: 1, r: 4.1 }];
   const batch = createBatch(scene, PALETTE);
   const ground = batch(island(seed), [{ x: 0, z: 0, scale: 0.44, y: -2.86 }]);
+  const clouds = createClouds(ground);
   const treeSpots = pineSpots(rng);
   obstacles.push(...pineObstacles(treeSpots));
   const pines = batch(pine(seed), treeSpots);
@@ -68,9 +72,16 @@ export function createWorld(seed: number) {
     { kind: "rock", mesh: rocks, make: () => rock(seed) },
     { kind: "pond", mesh: pond, make: () => water },
   ]);
-  const walkerBaked = bakeStack(character(), PALETTE);
-  const walker = new THREE.Mesh(walkerBaked.geometry, walkerBaked.material);
-  walker.scale.setScalar(0.063); scene.add(walker);
+  const walker = new THREE.Group(), parts = {} as Record<CharacterPart, THREE.Group>;
+  for (const { name, voxels, position, offset } of characterParts()) {
+    const baked = bakeStack(voxels, CHARACTER_PALETTE, { topTint: 0 });
+    const joint = new THREE.Group(), mesh = new THREE.Mesh(baked.geometry, baked.material);
+    joint.position.set(...position); mesh.position.y = offset;
+    joint.add(mesh); walker.add(joint); parts[name] = joint;
+  }
+  walker.scale.setScalar(CHARACTER_SCALE); scene.add(walker);
+  const avatar = createAvatar(walker, { head: parts.head, arms: [parts.leftArm, parts.rightArm], legs: [parts.leftLeg, parts.rightLeg] });
+  const frame: Frame = { time: 0, player: { x: 0, z: 0 }, motion: 0, dt: 0 };
   const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.55, 12), new THREE.MeshBasicMaterial({ color: 0x101c2b, transparent: true, opacity: 0.55, depthWrite: false }));
   shadow.rotateX(-Math.PI / 2); shadow.position.y = 0.05; scene.add(shadow);
   const fireflies = createFireflies(scene, rng);
@@ -78,14 +89,16 @@ export function createWorld(seed: number) {
     scene, obstacles, walker, shadow, sky,
     dispose() { details.dispose(); disposeScene(scene); },
     get detailCount() { return details.built; },
+    get detailState() { return details.state; },
     setView(camera: THREE.OrthographicCamera) {
       setSkyView(camera);
       life.setView(camera);
     },
     update(time: number, player: { x: number; z: number }, motion: number, dt: number, vertical: number, camera: THREE.OrthographicCamera) {
-      life.update({ time, player, motion, dt });
-      details.update(vertical, player, time, camera);
-      fireflies.update({ time, player, motion, dt });
+      frame.time = time; frame.player = player; frame.motion = motion; frame.dt = dt;
+      life.update(frame); clouds.update(frame); avatar.update(frame);
+      details.update(vertical, player, time, camera, dt);
+      fireflies.update(frame);
       pond.position.y = Math.sin(time * 0.6) * 0.015;
     },
   };

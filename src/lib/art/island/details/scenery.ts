@@ -3,6 +3,7 @@ import { random, trailX, type Obstacle } from "../math";
 import { rock } from "../models/rock";
 import { fill, model } from "../voxel/grid";
 import type { Batch, Spot } from "../voxel/batch";
+import { createReveal } from "../voxel/reveal";
 
 export function createScenery(seed: number, batch: Batch, obstacles: Obstacle[]) {
   const rng = random(seed + 300);
@@ -49,13 +50,17 @@ export function createScenery(seed: number, batch: Batch, obstacles: Obstacle[])
   bugs.frustumCulled = false;
   const meshes = [batch(flower, flowers), batch(clover, flowers.map((o) => ({ ...o, x: o.x + 0.2, scale: 0.025 }))), batch(pebble, pebbleSpots), batch(footprint, prints), batch(reed, [{ x: -11.7, z: 2.7, scale: 0.038 }, { x: -4.8, z: -0.7, scale: 0.035 }, { x: -7, z: -2.2, scale: 0.043 }]), batch(pad, [{ x: -7.8, z: -0.5, y: 0.14, scale: 0.055 }, { x: -7.1, z: 2.2, y: 0.14, scale: 0.04 }]), batch(rock(seed + 1), shore), bugs];
   const matrix = new THREE.Matrix4(), rotation = new THREE.Quaternion(), scale = new THREE.Vector3(0.012, 0.012, 0.012), position = new THREE.Vector3();
-  return (visible: boolean, time: number): void => {
-    meshes.forEach((mesh) => { mesh.visible = visible; });
-    for (let i = 0; i < bugs.count; i++) {
-      const o = flowers[i];
-      matrix.compose(position.set(o.x + Math.sin(time * 0.3 + i) * 0.3, 0.03, o.z + Math.cos(time * 0.4 + i) * 0.3), rotation.setFromAxisAngle(THREE.Object3D.DEFAULT_UP, time * 0.3 + i), scale);
-      bugs.setMatrixAt(i, matrix);
-    }
-    bugs.instanceMatrix.needsUpdate = true;
+  const reveal = createReveal(meshes);
+  return {
+    get amount() { return reveal.amount; },
+    update(amount: number, time: number, dt: number): void {
+      for (let i = 0; i < bugs.count; i++) {
+        const o = flowers[i];
+        matrix.compose(position.set(o.x + Math.sin(time * 0.3 + i) * 0.3, 0.03, o.z + Math.cos(time * 0.4 + i) * 0.3), rotation.setFromAxisAngle(THREE.Object3D.DEFAULT_UP, time * 0.3 + i), scale);
+        bugs.setMatrixAt(i, matrix);
+      }
+      bugs.instanceMatrix.needsUpdate = true;
+      reveal.update(amount, dt, bugs);
+    },
   };
 }

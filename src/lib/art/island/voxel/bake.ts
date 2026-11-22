@@ -11,10 +11,11 @@ export function pixelTexture(canvas: HTMLCanvasElement): THREE.CanvasTexture {
 }
 
 /** One atlas and one merged mesh per model, shared by every instance. */
-export function bakeStack(m: VoxelModel, palette: readonly string[]): {
+export function bakeStack(m: VoxelModel, palette: readonly string[], { topTint = 0.18 }: { topTint?: number } = {}): {
   geometry: THREE.BufferGeometry;
   material: THREE.MeshBasicMaterial;
 } {
+  if (!Number.isFinite(topTint) || topTint < 0 || topTint > 1) throw new RangeError("Top tint must be between zero and one");
   const columns = Math.ceil(Math.sqrt(m.height));
   const canvas = document.createElement("canvas");
   canvas.width = columns * m.width;
@@ -31,7 +32,7 @@ export function bakeStack(m: VoxelModel, palette: readonly string[]): {
           !voxel(m, x, y, z - 1) || !voxel(m, x, y, z + 1);
         shade.set(palette[index]);
         shade.multiplyScalar(edge ? (y % 3 === 0 ? 0.30 : 0.46) : 0.72 + 0.36 * y / m.height);
-        if (!edge && !voxel(m, x, y + 1, z)) shade.lerp(new THREE.Color("#98b6c5"), 0.18);
+        if (!edge && !voxel(m, x, y + 1, z)) shade.lerp(new THREE.Color("#98b6c5"), topTint);
         ctx.fillStyle = `#${shade.getHexString()}`;
         ctx.fillRect((y % columns) * m.width + x, Math.floor(y / columns) * m.depth + z, 1, 1);
       }

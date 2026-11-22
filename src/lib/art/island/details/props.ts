@@ -6,6 +6,7 @@ import { PALETTE } from "../models/palette";
 import { mushroom } from "../models/flora";
 import { rock } from "../models/rock";
 import { fill, model, type VoxelModel } from "../voxel/grid";
+import { createReveal } from "../voxel/reveal";
 
 const COLORS = [...PALETTE, "#c94c54", "#f1ead8", "#273d50", "#79a66a"];
 export function createSmallProps(seed: number, batch: Batch, sky: THREE.Group) {
@@ -90,13 +91,16 @@ export function createSmallProps(seed: number, batch: Batch, sky: THREE.Group) {
   const starPoints = [[0, 0], [1, 1.2], [2.6, 1.4], [3.5, 0.3], [2, -0.8], [1, 1.2], [0.7, -1.3]];
   const starGeometry = new THREE.BufferGeometry();
   starGeometry.setAttribute("position", new THREE.Float32BufferAttribute(starPoints.flatMap(([x, y]) => [x, y, 0]), 3));
-  const constellation = new THREE.Points(starGeometry, new THREE.PointsMaterial({ color: 0xa8c4bf, size: 1.5, sizeAttenuation: false, depthWrite: false }));
+  const constellation = new THREE.Points(starGeometry, new THREE.PointsMaterial({ color: 0xa8c4bf, size: 1.5, sizeAttenuation: false, depthWrite: false, transparent: true }));
   constellation.visible = false;
   sky.add(constellation);
+  const reveal = createReveal(meshes);
   return {
-    update(time: number, player: Point, visible: boolean, camera: THREE.OrthographicCamera) {
-      for (const mesh of meshes) mesh.visible = visible;
-      constellation.visible = visible;
+    get amount() { return reveal.amount; },
+    update(time: number, player: Point, amount: number, camera: THREE.OrthographicCamera, dt: number) {
+      const progress = reveal.update(amount, dt);
+      constellation.visible = progress > 0;
+      constellation.material.opacity = progress;
       constellation.position.set(camera.left + (camera.right - camera.left) * 0.18, camera.top - (camera.top - camera.bottom) * 0.2, -148);
       constellation.scale.setScalar((camera.top - camera.bottom) * 0.025);
       cat.position.y = Math.sin(time * 1.7) * 0.012;

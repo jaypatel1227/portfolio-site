@@ -8,6 +8,7 @@ export function createRenderer(canvas: HTMLCanvasElement) {
   const target = new THREE.WebGLRenderTarget(1, 1, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, generateMipmaps: false });
   const screen = new THREE.Scene();
   const outputCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  let pixelSize = 3, width = 1, height = 1;
   const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.MeshBasicMaterial({ map: target.texture, depthTest: false, depthWrite: false }));
   screen.add(quad);
   let info = { ...renderer.info.render }, raf = 0, last = 0, running = false;
@@ -21,13 +22,17 @@ export function createRenderer(canvas: HTMLCanvasElement) {
   return {
     get info() { return info; },
     get memory() { return renderer.info.memory; },
-    resize(width: number, height: number) { renderer.setSize(width, height); },
+    get resolution() { return { width: target.width, height: target.height, pixels: pixelSize }; },
+    resize(w: number, h: number) {
+      width = w; height = h; renderer.setSize(w, h);
+    },
     setRunning(next: boolean, callback: typeof update) {
       running = next; update = callback;
       if (running && !raf) { last = performance.now(); raf = requestAnimationFrame(frame); }
       else if (!running && raf) { cancelAnimationFrame(raf); raf = 0; }
     },
-    render(scene: THREE.Scene, camera: THREE.Camera, width: number, height: number, pixels: number) {
+    render(scene: THREE.Scene, camera: THREE.Camera, pixels: number) {
+      pixelSize = pixels;
       const w = Math.ceil(width / pixels), h = Math.ceil(height / pixels);
       if (target.width !== w || target.height !== h) target.setSize(w, h);
       renderer.setRenderTarget(target); renderer.render(scene, camera);

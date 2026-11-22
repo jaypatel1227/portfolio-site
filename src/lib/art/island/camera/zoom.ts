@@ -31,6 +31,11 @@ export function createZoom(initial: number) {
   };
 }
 
-export function pixelScale(vertical: number, width: number): number {
-  return vertical <= 10 ? 1 : vertical <= 22 || width < 1024 ? 2 : 3;
+export function pixelScale(vertical: number, width: number, previous = 3): number {
+  if (width < 1024) return 2;
+  if (vertical < 9) return 1;
+  if (vertical > 23) return 3;
+  if (previous === 1 && vertical <= 11) return 1;
+  if (previous === 3 && vertical >= 21) return 3;
+  return 2;
 }

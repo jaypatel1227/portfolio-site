@@ -14,7 +14,7 @@ export function createRuntime(canvas: HTMLCanvasElement, bridge: Bridge, signal:
   const renderer = createRenderer(canvas), view = createCamera(), world = createWorld(SEED);
   view.camera.add(world.sky); world.scene.add(view.camera);
   const actor = createPlayer(HOME, world.obstacles), player = actor.position;
-  let enabled = false, phase: Phase = "rest", width = innerWidth, height = innerHeight;
+  let enabled = false, phase: Phase = "rest", width = innerWidth, height = innerHeight, pixels = 3;
   let drift: { elapsed: number; x: number; z: number; yaw: number } | null = null;
   const setPhase = (next: Phase): void => { phase = next; bridge.phase(next); };
   const input = bindInput(canvas, {
@@ -32,7 +32,8 @@ export function createRuntime(canvas: HTMLCanvasElement, bridge: Bridge, signal:
     world.shadow.position.x = player.x; world.shadow.position.z = player.z;
     world.update(time, player, motion, dt, vertical, view.camera);
     bridge.note(enabled && !drift && Math.hypot(player.x - NOTE.x, player.z - NOTE.z) < PLAYER.noteDistance);
-    renderer.render(world.scene, view.camera, width, height, pixelScale(vertical, width));
+    pixels = pixelScale(vertical, width, pixels);
+    renderer.render(world.scene, view.camera, pixels);
   }
   function frame(now: number, dt: number): void {
     let motion = 0;
@@ -62,11 +63,13 @@ export function createRuntime(canvas: HTMLCanvasElement, bridge: Bridge, signal:
     dispose() { renderer.dispose(); world.dispose(); },
     debug: {
       player,
+      camera: view.camera,
       teleport(x: number, z: number) { player.x = x; player.z = z; setPhase("away"); },
       rotate(angle: number) { view.rotate(angle); },
       get yaw() { return view.yaw; }, get enabled() { return enabled; },
       get zoom() { return view.zoom; }, get vertical() { return view.vertical; },
       get detailCount() { return world.detailCount; }, get framing() { return view.framing; },
+      get detailState() { return world.detailState; }, get resolution() { return renderer.resolution; },
       get renderInfo() { return renderer.info; }, get memory() { return renderer.memory; },
     },
   };
