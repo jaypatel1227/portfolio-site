@@ -1,6 +1,6 @@
 import { createScenery } from "./scenery";
 import { createCollection } from "./collection";
-import { advance } from "./work";
+import { advance, buildBudget } from "./work";
 import type { Batch } from "../voxel/batch";
 import { DETAIL } from "../config";
 import * as THREE from "three";
@@ -53,7 +53,11 @@ export function createDetails(seed: number, batch: Batch, scene: THREE.Scene, sk
   function build(idle?: IdleDeadline): void {
     scheduled = false;
     if (!preloading || disposed) return;
-    const end = performance.now() + Math.min(5, idle?.timeRemaining() ?? 5);
+    const end = performance.now() + buildBudget(idle);
+    if (collecting && collection.pending(latestPlayer)) {
+      collection.build(latestPlayer, end);
+      return;
+    }
     const entry = entries.find((e) => !e.high && needed(e));
     if (entry) {
       entry.work ??= buildLod(entry, seed);
@@ -72,7 +76,6 @@ export function createDetails(seed: number, batch: Batch, scene: THREE.Scene, sk
       entry.mesh.parent!.add(entry.high);
     } else if (!scenery) scenery = createScenery(seed, batch, obstacles);
     else if (!small) small = createSmallProps(seed, batch, sky);
-    else if (collecting) collection.build(latestPlayer, end);
   }
   return {
     dispose() { disposed = true; },
@@ -87,7 +90,7 @@ export function createDetails(seed: number, batch: Batch, scene: THREE.Scene, sk
       const amount = zoomReveal(vertical, DETAIL.sceneryHeight, DETAIL.sceneryBand);
       if (preloading && !scheduled && (entries.some((e) => !e.high && needed(e)) || !scenery || !small || collecting && collection.pending(player))) {
         scheduled = true;
-        if ("requestIdleCallback" in window) window.requestIdleCallback(build, { timeout: 500 });
+        if ("requestIdleCallback" in window) window.requestIdleCallback(build, { timeout: 32 });
         else setTimeout(build, 0);
       }
       if (zoomed) {
