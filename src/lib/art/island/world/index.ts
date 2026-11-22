@@ -19,7 +19,7 @@ import { cabin } from "../models/cabin";
 import { rock } from "../models/rock";
 import { lantern, sign } from "../models/props";
 import { mushroom, grass } from "../models/flora";
-import { character, CHARACTER_SCALE } from "../models/character";
+import { characterParts, CHARACTER_SCALE, type CharacterPart } from "../models/character";
 import { createClouds } from "../life/clouds";
 import { createAvatar } from "../life/avatar";
 import type { Frame } from "../life/types";
@@ -72,10 +72,15 @@ export function createWorld(seed: number) {
     { kind: "rock", mesh: rocks, make: () => rock(seed) },
     { kind: "pond", mesh: pond, make: () => water },
   ]);
-  const walkerBaked = bakeStack(character(), CHARACTER_PALETTE, { topTint: 0 });
-  const walker = new THREE.Mesh(walkerBaked.geometry, walkerBaked.material);
+  const walker = new THREE.Group(), parts = {} as Record<CharacterPart, THREE.Group>;
+  for (const { name, voxels, position, offset } of characterParts()) {
+    const baked = bakeStack(voxels, CHARACTER_PALETTE, { topTint: 0 });
+    const joint = new THREE.Group(), mesh = new THREE.Mesh(baked.geometry, baked.material);
+    joint.position.set(...position); mesh.position.y = offset;
+    joint.add(mesh); walker.add(joint); parts[name] = joint;
+  }
   walker.scale.setScalar(CHARACTER_SCALE); scene.add(walker);
-  const avatar = createAvatar(walker);
+  const avatar = createAvatar(walker, { head: parts.head, arms: [parts.leftArm, parts.rightArm], legs: [parts.leftLeg, parts.rightLeg] });
   const frame: Frame = { time: 0, player: { x: 0, z: 0 }, motion: 0, dt: 0 };
   const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.55, 12), new THREE.MeshBasicMaterial({ color: 0x101c2b, transparent: true, opacity: 0.55, depthWrite: false }));
   shadow.rotateX(-Math.PI / 2); shadow.position.y = 0.05; scene.add(shadow);
