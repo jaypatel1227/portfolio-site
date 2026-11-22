@@ -19,7 +19,7 @@ import { cabin } from "../models/cabin";
 import { rock } from "../models/rock";
 import { lantern, sign } from "../models/props";
 import { mushroom, grass } from "../models/flora";
-import { character } from "../models/character";
+import { character, CHARACTER_SCALE } from "../models/character";
 import { createClouds } from "../life/clouds";
 import { createAvatar } from "../life/avatar";
 import type { Frame } from "../life/types";
@@ -74,7 +74,7 @@ export function createWorld(seed: number) {
   ]);
   const walkerBaked = bakeStack(character(), PALETTE);
   const walker = new THREE.Mesh(walkerBaked.geometry, walkerBaked.material);
-  walker.scale.setScalar(0.063); scene.add(walker);
+  walker.scale.setScalar(CHARACTER_SCALE); scene.add(walker);
   const avatar = createAvatar(walker);
   const frame: Frame = { time: 0, player: { x: 0, z: 0 }, motion: 0, dt: 0 };
   const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.55, 12), new THREE.MeshBasicMaterial({ color: 0x101c2b, transparent: true, opacity: 0.55, depthWrite: false }));

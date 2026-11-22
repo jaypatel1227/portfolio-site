@@ -14,7 +14,7 @@ import { fish, fox, owl, rabbit } from "./animals.ts";
 void it("preserves the established seed's voxel artwork", () => {
   const snapshots = [
     [cabin, "ae87e50afc7edbb8fb62c9fd08fcb07dd6fa3b3bc1f50742d125772bdecb0914"],
-    [character, "a76f7dba33fb1b51d25f2ab0d631774fb239f2ee41db43669c31b2203802ce7c"],
+    [character, "7430bea98bf7b50271cc52e9ad582235cb15b41df1ef846451e3720420f42d91"],
     [grass, "e75810fef6ef27119cacf54de59ce8c29808e24c5571b4580315b03f5f7478de"],
     [greatTree, "e048ba1414824b21a8fbc006538775e6f26d748af6330a4cd6309b38449440cb"],
     [island, "17bbdec65356cd7ca379d4a2cc0b3445487fc38bdc021bc0fd07315430087a66"],

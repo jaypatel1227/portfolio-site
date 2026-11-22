@@ -1,16 +1,26 @@
 import { fill, model, type VoxelModel } from "../voxel/grid";
 
+export const CHARACTER_HEAD = 24;
+export const CHARACTER_SCALE = 1.575 / 32;
+
 export function character(): VoxelModel {
-  const m = model(15, 27, 13);
+  const m = model(16, 32, 8);
   fill(m, (x, y, z) => {
-    if (y < 5) return Math.abs(z) < 3 && Math.abs(x) > 1 && Math.abs(x) < 5 ? (y < 2 ? 2 : 22) : 0;
-    if (y < 15 && Math.abs(x) < 5 && Math.abs(z) < 3) return y > 12 ? 19 : 22;
-    if (y > 6 && y < 15 && Math.abs(x) < 7 && Math.abs(z) < 2) return y < 9 ? 21 : 22;
-    if (y >= 15 && y < 25 && Math.abs(x) < 5 && Math.abs(z) < 5) {
-      if (z > 1 && y < 22) return y === 19 && Math.abs(x) > 1 && Math.abs(x) < 4 ? 2 : 21;
-      return y > 22 ? 17 : 16;
+    if (y < 12) return Math.abs(x) < 4 && Math.abs(z) < 2 ? (y < 2 ? 31 : Math.abs(x) < 1 ? 33 : 30) : 0;
+    if (y < CHARACTER_HEAD && Math.abs(z) < 2) {
+      if (Math.abs(x) < 4) return 29;
+      return y >= 20 ? 29 : 24;
     }
-    if (y > 7 && y < 15 && z < -2 && z > -5 && Math.abs(x) < 4) return 16;
+    if (y >= CHARACTER_HEAD && Math.abs(x) < 4) {
+      if (y >= 30 || z < -2 || Math.abs(x) > 2.5 && y >= 28) return 25;
+      if (z > 2.5) {
+        if (y === 29 && x < -1) return 25;
+        if (y === 28 && Math.abs(x) > 1 && Math.abs(x) < 3) return Math.abs(x) < 2 ? 28 : 27;
+        if (y === 27 && Math.abs(x) < 1) return 32;
+        if (y < 27 && Math.abs(x) < 2) return y === 25 && Math.abs(x) < 1 ? 32 : 26;
+      }
+      return 24;
+    }
     return 0;
   });
   return m;
