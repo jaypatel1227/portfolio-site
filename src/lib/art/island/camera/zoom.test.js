@@ -14,14 +14,21 @@ void it("increases pixel resolution close up without changing narrow still-frame
   assert.equal(pixelScale(100, 390), 2);
 });
 
-void it("blends pixel grids continuously across both former resolution steps in either direction", () => {
-  for (const center of [10, 22]) {
-    const values = [];
-    for (let i = 0; i <= 100; i++) values.push(pixelScale(center - 2 + i * 0.04, 1440));
-    for (let i = 1; i < values.length; i++) assert.ok(values[i] >= values[i - 1] && values[i] - values[i - 1] < 0.016);
-    for (let i = 100; i >= 0; i--) assert.equal(pixelScale(center - 2 + i * 0.04, 1440), values[i]);
-    assert.ok(Math.abs(pixelScale(center + 0.001, 1440) - pixelScale(center - 0.001, 1440)) < 0.001);
+void it("keeps one integer pixel grid and holds it through boundary jitter in both directions", () => {
+  for (const [center, fine, coarse] of [[10, 1, 2], [22, 2, 3]]) {
+    for (const initial of [fine, coarse]) {
+      let grid = initial;
+      for (const height of [center, center - 0.1, center + 0.1, center, center + 0.5]) {
+        grid = pixelScale(height, 1440, grid);
+        assert.equal(grid, initial);
+      }
+    }
+    assert.equal(pixelScale(center - 1.01, 1440, coarse), fine);
+    assert.equal(pixelScale(center + 1.01, 1440, fine), coarse);
   }
+  assert.equal(pixelScale(6, 1440, 3), 1);
+  assert.equal(pixelScale(60, 1440, 1), 3);
+  for (let height = 6; height <= 60; height += 0.03) assert.ok(Number.isInteger(pixelScale(height, 1440)));
 });
 
 void it("keeps first zoom-out at the resting limit and zooms in from the displayed height", () => {

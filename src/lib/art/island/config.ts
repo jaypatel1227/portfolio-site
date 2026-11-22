@@ -17,5 +17,6 @@ export const PLAYER = {
 export const DETAIL = {
   sceneryHeight: 18, sceneryBand: 4, discoveryHeight: 10, discoveryBand: 2,
   preloadHeight: 26, revealSeconds: 0.6, distanceBand: 2,
+  lodHeight: 17, lodBand: 2,
   oakRadius: 12, nearbyRadius: 9,
 };

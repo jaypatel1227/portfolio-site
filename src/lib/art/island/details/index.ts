@@ -8,8 +8,8 @@ import { PALETTE } from "../models/palette";
 import { createSmallProps } from "./props";
 import { bakeStack } from "../voxel/bake";
 import { type VoxelModel } from "../voxel/grid";
-import { approachReveal, lodNearby, zoomReveal } from "../voxel/reveal-math";
-import { dissolve } from "../voxel/dissolve";
+import { lodNearby, zoomReveal } from "../voxel/reveal-math";
+import { createLodSwap } from "../voxel/lod";
 
 interface Source { kind: DetailKind; mesh: THREE.InstancedMesh; make: () => VoxelModel }
 
@@ -19,13 +19,13 @@ export function createDetails(seed: number, batch: Batch, sky: THREE.Group, obst
     ...source,
     originals: Array.from({ length: source.mesh.count }, (_, i) => { const m = new THREE.Matrix4(); source.mesh.getMatrixAt(i, m); return m; }),
     high: null as THREE.InstancedMesh | null,
-    weights: new Float32Array(source.mesh.count),
     nearby: Array<boolean>(source.mesh.count).fill(false),
-    dirty: () => {},
+    selected: Array<boolean>(source.mesh.count).fill(false),
+    swap: null as ReturnType<typeof createLodSwap> | null,
   }));
   let scenery: ReturnType<typeof createScenery> | null = null;
   let small: ReturnType<typeof createSmallProps> | null = null;
-  let scheduled = false, preloading = false, disposed = false;
+  let scheduled = false, preloading = false, disposed = false, zoomed = false;
   let latestPlayer: Point = { x: 0, z: 0 };
   const distance = (matrix: THREE.Matrix4): number => {
     position.setFromMatrixPosition(matrix);
@@ -46,8 +46,7 @@ export function createDetails(seed: number, batch: Batch, sky: THREE.Group, obst
       entry.high = new THREE.InstancedMesh(baked.geometry, baked.material, entry.originals.length);
       entry.originals.forEach((matrix, i) => entry.high!.setMatrixAt(i, matrix));
       entry.high.visible = false; entry.high.frustumCulled = false;
-      const lowDirty = dissolve(entry.mesh, entry.weights, true), highDirty = dissolve(entry.high, entry.weights);
-      entry.dirty = () => { lowDirty(); highDirty(); };
+      entry.swap = createLodSwap(entry.mesh, entry.high, entry.originals);
       entry.mesh.parent!.add(entry.high);
     } else if (!scenery) scenery = createScenery(seed, batch, obstacles);
     else if (!small) small = createSmallProps(seed, batch, sky);
@@ -56,10 +55,11 @@ export function createDetails(seed: number, batch: Batch, sky: THREE.Group, obst
     dispose() { disposed = true; },
     get built() { return entries.filter((e) => e.high).length; },
     get state() {
-      return { scenery: scenery?.amount ?? 0, discoveries: small?.amount ?? 0, lod: entries.map((e) => Array.from(e.weights)) };
+      return { scenery: scenery?.amount ?? 0, discoveries: small?.amount ?? 0, lod: entries.map((e) => e.selected.map(Number)) };
     },
     update(vertical: number, player: Point, time: number, camera: THREE.OrthographicCamera, dt: number) {
       preloading = vertical < DETAIL.preloadHeight; latestPlayer = player;
+      zoomed = lodNearby(vertical, DETAIL.lodHeight, zoomed, DETAIL.lodBand);
       const amount = zoomReveal(vertical, DETAIL.sceneryHeight, DETAIL.sceneryBand);
       if (preloading && !scheduled && (entries.some((e) => !e.high && needed(e)) || !scenery || !small)) {
         scheduled = true;
@@ -68,16 +68,12 @@ export function createDetails(seed: number, batch: Batch, sky: THREE.Group, obst
       }
       for (const entry of entries) {
         if (!entry.high) continue;
-        let min = 1, max = 0;
         entry.originals.forEach((matrix, i) => {
           entry.nearby[i] = entry.kind === "ground" || lodNearby(distance(matrix), radius(entry), entry.nearby[i], DETAIL.distanceBand);
-          const weight = approachReveal(entry.weights[i], entry.nearby[i] ? amount : 0, dt, DETAIL.revealSeconds);
-          entry.weights[i] = weight;
-          min = Math.min(min, weight); max = Math.max(max, weight);
+          entry.selected[i] = zoomed && entry.nearby[i];
         });
-        entry.mesh.visible = min < 1; entry.high.visible = max > 0;
+        entry.swap!(entry.selected);
         entry.high.position.copy(entry.mesh.position);
-        entry.dirty();
       }
       scenery?.update(amount, time, dt);
       small?.update(time, player, zoomReveal(vertical, DETAIL.discoveryHeight, DETAIL.discoveryBand), camera, dt);

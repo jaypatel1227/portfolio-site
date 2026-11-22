@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import * as THREE from "three";
 import { approachReveal, lodNearby, staggerReveal, zoomReveal } from "./reveal-math.ts";
 import { createReveal } from "./reveal.ts";
-import { dissolve } from "./dissolve.ts";
+import { createLodSwap } from "./lod.ts";
 
 void it("reveals gradually inside each zoom band, with identical values in either direction", () => {
   for (const [threshold, band] of [[18, 4], [10, 2]]) {
@@ -97,25 +97,25 @@ void it("uses fresh animation matrices and accepts empty detail batches", () => 
   assert.equal(createReveal([mesh(0)]).update(0, 0), 0);
 });
 
-void it("uses complementary LOD coverage and preserves existing wind shaders", () => {
-  const low = mesh(), high = mesh(), weights = new Float32Array([0, 0.5]);
-  for (const object of [low, high]) {
-    object.material.onBeforeCompile = (shader) => { shader.vertexShader += "\n// existing wind"; };
-    object.material.customProgramCacheKey = () => "wind";
+void it("draws exactly one complete LOD per instance without changing its material", () => {
+  const low = mesh(), high = mesh(), matrix = new THREE.Matrix4();
+  const originals = [0, 1].map((i) => { const m = new THREE.Matrix4(); low.getMatrixAt(i, m); return m; });
+  const compile = low.material.onBeforeCompile.bind(low.material);
+  low.material.onBeforeCompile = compile;
+  const swap = createLodSwap(low, high, originals);
+  for (const selection of [[false, true], [true, false], [true, true], [false, false]]) {
+    swap(selection);
+    for (let i = 0; i < 2; i++) {
+      low.getMatrixAt(i, matrix); assert.equal(matrix.determinant() !== 0, !selection[i]);
+      high.getMatrixAt(i, matrix); assert.equal(matrix.determinant() !== 0, selection[i]);
+    }
   }
-  const dirty = dissolve(low, weights, true);
-  dissolve(high, weights);
-  const shaders = [low, high].map((object) => {
-    const shader = { vertexShader: "#include <begin_vertex>", fragmentShader: "#include <alphatest_fragment>" };
-    object.material.onBeforeCompile(shader, {});
-    assert.ok(shader.vertexShader.includes("existing wind"));
-    assert.ok(shader.vertexShader.includes("stackMix = stackCoverage"));
-    assert.equal(object.geometry.getAttribute("stackCoverage").array, weights);
-    return shader;
-  });
-  assert.ok(shaders[0].fragmentShader.includes("threshold < stackMix"));
-  assert.ok(shaders[1].fragmentShader.includes("threshold >= stackMix"));
-  assert.notEqual(low.material.customProgramCacheKey(), high.material.customProgramCacheKey());
-  const attribute = low.geometry.getAttribute("stackCoverage"), version = attribute.version;
-  dirty(); assert.equal(attribute.version, version + 1);
+  assert.ok(low.material.onBeforeCompile === compile);
+  const version = low.instanceMatrix.version;
+  swap([false, false]); assert.equal(low.instanceMatrix.version, version);
+  assert.throws(() => swap([]), RangeError);
+  assert.throws(() => createLodSwap(mesh(0), high, originals), RangeError);
+  const emptyLow = mesh(0), emptyHigh = mesh(0);
+  createLodSwap(emptyLow, emptyHigh, [])([]);
+  assert.equal(emptyLow.visible, false); assert.equal(emptyHigh.visible, false);
 });
