@@ -16,9 +16,9 @@ export function orrery() {
   }
   body([0, 18, 0], 10, (x, y, z) => Math.sin(x * 0.55 + Math.sin(y) + z * 0.35) > 0.55 ? "#ffd475" : y < -3 ? "#e66e3f" : "#f8ab50");
   // Hourglass Twins: a stream joins the striped sandstone and ash-shell cores.
-  body([-17, 13, 16], 4, (_x, y) => y === 0 || y === -2 ? "#9e5136" : "#d88a59");
-  body([-23, 13, 22], 4, (x, y, z) => Math.abs(x + z) < 2 ? "#bc875a" : y > 0 ? "#76675b" : "#4b4749");
-  s.rod([-17, 13, 16], [-23, 13, 22], 1, "#e9ba82");
+  s.rod([-17, 15, 16], [-32, 12, 25], 1, "#f6ca84");
+  body([-17, 15, 16], 4, (_x, y) => y === 0 || y === -2 ? "#9e5136" : "#d88a59");
+  body([-32, 12, 25], 4, (x, y, z) => Math.abs(x + z) < 2 ? "#bc875a" : y > 0 ? "#76675b" : "#4b4749");
   // Timber Hearth's seas, polar forests, pale crater moon.
   body([17, 13, 23], 6, (x, y, z) => Math.sin(x * 0.8 + z * 0.5) + Math.cos(y * 0.6) > 0.5 ? "#5c91a0" : y > 2 ? "#537457" : "#81814f");
   s.orb([24, 18, 27], [2, 2, 2], "#bdbca4");
