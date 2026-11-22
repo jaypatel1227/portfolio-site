@@ -12,9 +12,9 @@ export function character(): VoxelModel {
       return y >= 20 ? 29 : 24;
     }
     if (y >= CHARACTER_HEAD && Math.abs(x) < 4) {
-      if (y >= 30 || z < -2 || Math.abs(x) > 2.5 && y >= 28) return 25;
+      if (y >= 30 || z < -2 || Math.abs(x) > 2.5 && y >= 28) return 26;
       if (z > 2.5) {
-        if (y === 29 && x < -1) return 25;
+        if (y === 29 && x < -1) return 26;
         if (y === 28 && Math.abs(x) > 1 && Math.abs(x) < 3) return Math.abs(x) < 2 ? 28 : 27;
         if (y === 27 && Math.abs(x) < 1) return 32;
         if (y < 27 && Math.abs(x) < 2) return y === 25 && Math.abs(x) < 1 ? 32 : 26;

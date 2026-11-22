@@ -17,8 +17,8 @@ void it("uses an eight-cube head, twelve-high body and limbs at the existing wor
   assert.equal(voxel(m, 0, 12, 2), 24);
   assert.equal(voxel(m, 0, 20, 2), 29);
   assert.equal(voxel(m, 6, 20, 2), 29);
-  assert.equal(voxel(m, 4, 31, 0), 25);
-  assert.equal(voxel(m, 4, 25, 0), 25);
+  for (let x = 4; x < 12; x++) for (let z = 0; z < 8; z++) assert.equal(voxel(m, x, 31, z), 26);
+  for (let x = 4; x < 12; x++) for (let y = 24; y < 32; y++) assert.equal(voxel(m, x, y, 0), 26);
   assert.equal(voxel(m, 5, 28, 7), 27);
   assert.equal(voxel(m, 6, 28, 7), 28);
   assert.equal(voxel(m, 7, 24, 7), 26);

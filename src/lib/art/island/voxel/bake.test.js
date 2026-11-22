@@ -6,6 +6,8 @@ import { fill, model, voxel } from "./grid.ts";
 import { greatTree } from "../models/oak.ts";
 import { pine } from "../models/pine.ts";
 import { rock } from "../models/rock.ts";
+import { character } from "../models/character.ts";
+import { PALETTE } from "../models/palette.ts";
 
 void describe("voxel models", () => {
   void it("rejects invalid grid dimensions", () => {
@@ -37,9 +39,11 @@ void describe("voxel models", () => {
 void describe("slice baking", () => {
   function withCanvas(run) {
     const previous = globalThis.document;
-    const canvas = { width: 0, height: 0, getContext: () => ({ fillRect() {}, fillStyle: "" }) };
+    const pixels = new Map();
+    const context = { fillStyle: "", fillRect(x, y) { pixels.set(`${x},${y}`, this.fillStyle); } };
+    const canvas = { width: 0, height: 0, getContext: () => context };
     globalThis.document = { createElement: () => canvas };
-    try { run(canvas); } finally { globalThis.document = previous; }
+    try { run(canvas, pixels); } finally { globalThis.document = previous; }
   }
 
   void it("keeps texture pixels crisp", () => withCanvas((canvas) => {
@@ -70,5 +74,28 @@ void describe("slice baking", () => {
     const m = model(1, 1, 1);
     fill(m, () => 2);
     assert.throws(() => bakeStack(m, ["#000000", "#ffffff"]), /Missing voxel palette index 2/);
+  }));
+
+  void it("preserves default sky tint but keeps every character top-hair texel brown when disabled", () => withCanvas((_canvas, pixels) => {
+    const m = character();
+    const tinted = bakeStack(m, PALETTE);
+    const defaultTop = pixels.get("24,44");
+    const untinted = bakeStack(m, PALETTE, { topTint: 0 });
+    assert.notEqual(pixels.get("24,44"), defaultTop);
+    for (let x = 4; x < 12; x++) for (let z = 0; z < 8; z++) {
+      const color = new THREE.Color(pixels.get(`${16 + x},${40 + z}`));
+      assert.ok(color.r > color.g && color.g > color.b);
+    }
+    const expected = new THREE.Color(PALETTE[26]).multiplyScalar(0.72 + 0.36 * 31 / 32);
+    assert.equal(pixels.get("24,44"), `#${expected.getHexString()}`);
+    assert.equal(defaultTop, `#${expected.lerp(new THREE.Color("#98b6c5"), 0.18).getHexString()}`);
+    for (const b of [tinted, untinted]) { b.geometry.dispose(); b.material.map.dispose(); b.material.dispose(); }
+  }));
+
+  void it("allows untinted empty art and rejects invalid top tint", () => withCanvas(() => {
+    const m = model(1, 1, 1), baked = bakeStack(m, PALETTE, { topTint: 0 });
+    assert.equal(baked.geometry.attributes.position.count, 6);
+    for (const topTint of [-1, 2, NaN, Infinity]) assert.throws(() => bakeStack(m, PALETTE, { topTint }), /Top tint/);
+    baked.geometry.dispose(); baked.material.map.dispose(); baked.material.dispose();
   }));
 });

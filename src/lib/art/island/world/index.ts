@@ -72,7 +72,7 @@ export function createWorld(seed: number) {
     { kind: "rock", mesh: rocks, make: () => rock(seed) },
     { kind: "pond", mesh: pond, make: () => water },
   ]);
-  const walkerBaked = bakeStack(character(), PALETTE);
+  const walkerBaked = bakeStack(character(), PALETTE, { topTint: 0 });
   const walker = new THREE.Mesh(walkerBaked.geometry, walkerBaked.material);
   walker.scale.setScalar(CHARACTER_SCALE); scene.add(walker);
   const avatar = createAvatar(walker);
