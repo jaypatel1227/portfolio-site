@@ -20,6 +20,9 @@ import { rock } from "../models/rock";
 import { lantern, sign } from "../models/props";
 import { mushroom, grass } from "../models/flora";
 import { character } from "../models/character";
+import { createClouds } from "../life/clouds";
+import { createAvatar } from "../life/avatar";
+import type { Frame } from "../life/types";
 
 export { HOME, NOTE } from "./layout";
 
@@ -31,6 +34,7 @@ export function createWorld(seed: number) {
   const obstacles: Obstacle[] = [{ x: 2, z: -5, r: 1.15 }, { x: 10, z: -1, r: 2.35 }, { x: -8, z: 1, r: 4.1 }];
   const batch = createBatch(scene, PALETTE);
   const ground = batch(island(seed), [{ x: 0, z: 0, scale: 0.44, y: -2.86 }]);
+  const clouds = createClouds(ground);
   const treeSpots = pineSpots(rng);
   obstacles.push(...pineObstacles(treeSpots));
   const pines = batch(pine(seed), treeSpots);
@@ -71,6 +75,8 @@ export function createWorld(seed: number) {
   const walkerBaked = bakeStack(character(), PALETTE);
   const walker = new THREE.Mesh(walkerBaked.geometry, walkerBaked.material);
   walker.scale.setScalar(0.063); scene.add(walker);
+  const avatar = createAvatar(walker);
+  const frame: Frame = { time: 0, player: { x: 0, z: 0 }, motion: 0, dt: 0 };
   const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.55, 12), new THREE.MeshBasicMaterial({ color: 0x101c2b, transparent: true, opacity: 0.55, depthWrite: false }));
   shadow.rotateX(-Math.PI / 2); shadow.position.y = 0.05; scene.add(shadow);
   const fireflies = createFireflies(scene, rng);
@@ -84,9 +90,10 @@ export function createWorld(seed: number) {
       life.setView(camera);
     },
     update(time: number, player: { x: number; z: number }, motion: number, dt: number, vertical: number, camera: THREE.OrthographicCamera) {
-      life.update({ time, player, motion, dt });
+      frame.time = time; frame.player = player; frame.motion = motion; frame.dt = dt;
+      life.update(frame); clouds.update(frame); avatar.update(frame);
       details.update(vertical, player, time, camera, dt);
-      fireflies.update({ time, player, motion, dt });
+      fireflies.update(frame);
       pond.position.y = Math.sin(time * 0.6) * 0.015;
     },
   };
