@@ -5,7 +5,6 @@ import { approachReveal, staggerReveal } from "./reveal-math";
 export function createReveal(meshes: THREE.InstancedMesh[]) {
   const entries = meshes.map((mesh) => {
     mesh.visible = false;
-    mesh.frustumCulled = false;
     const originals = Array.from({ length: mesh.count }, (_, i) => {
       const matrix = new THREE.Matrix4(); mesh.getMatrixAt(i, matrix); return matrix;
     });
@@ -16,10 +15,12 @@ export function createReveal(meshes: THREE.InstancedMesh[]) {
   return {
     get amount() { return amount; },
     update(target: number, dt: number, moving?: THREE.InstancedMesh): number {
+      const before = amount;
       amount = approachReveal(amount, target, dt, DETAIL.revealSeconds);
       let index = 0;
       for (const { mesh, originals } of entries) {
         mesh.visible = amount > 0;
+        if (amount === 0 || (amount === before && mesh !== moving)) { index += originals.length; continue; }
         for (let i = 0; i < originals.length; i++) {
           if (mesh === moving) mesh.getMatrixAt(i, originals[i]);
           const size = staggerReveal(amount, index++);

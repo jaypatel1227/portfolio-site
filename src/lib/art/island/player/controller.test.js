@@ -19,3 +19,20 @@ void it("resolves blocked and large-delta movement through the shared collision 
   assert.ok(actor.position.x > -12);
   assert.ok(Math.hypot(actor.position.x + 12, actor.position.z - 6) >= 0.72 - 1e-9);
 });
+
+void it("runs back around a blocker at sprint speed, advances its gait, and stops at home", () => {
+  const actor = createPlayer({ x: -3, z: 0 }, [{ x: 0, z: 0, r: 1 }]), dt = 0.02;
+  for (const [forward, strafe, frames] of [[1, 0, 38], [0, 1, 91], [-1, 0, 38]]) {
+    for (let i = 0; i < frames; i++) actor.move(forward, strafe, 0, false, dt);
+  }
+  assert.ok(actor.position.x > 2.9);
+  const steps = actor.steps;
+  for (let i = 0; i < 200 && !actor.atHome; i++) {
+    const old = { ...actor.position }, speed = actor.runHome(dt);
+    assert.ok(speed > 0 && speed <= 5.28 + 1e-9);
+    assert.ok(Math.hypot(actor.position.x - old.x, actor.position.z - old.z) <= speed * dt + 1e-9);
+    assert.ok(Math.hypot(actor.position.x, actor.position.z) >= 1.34 - 1e-6);
+  }
+  assert.ok(actor.steps > steps && actor.atHome);
+  assert.equal(actor.runHome(dt), 0);
+});

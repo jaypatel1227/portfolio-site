@@ -40,7 +40,12 @@ void describe("slice baking", () => {
   function withCanvas(run) {
     const previous = globalThis.document;
     const pixels = new Map();
-    const context = { fillStyle: "", fillRect(x, y) { pixels.set(`${x},${y}`, this.fillStyle); } };
+    const context = {
+      createImageData: (width, height) => ({ width, data: new Uint8ClampedArray(width * height * 4) }),
+      putImageData({ width, data }) {
+        for (let i = 0; i < data.length; i += 4) if (data[i + 3]) pixels.set(`${i / 4 % width},${Math.floor(i / 4 / width)}`, "#" + Buffer.from(data.slice(i, i + 3)).toString("hex"));
+      },
+    };
     const canvas = { width: 0, height: 0, getContext: () => context };
     globalThis.document = { createElement: () => canvas };
     try { run(canvas, pixels); } finally { globalThis.document = previous; }

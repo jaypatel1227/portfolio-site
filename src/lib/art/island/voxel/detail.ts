@@ -1,10 +1,16 @@
 import { model, voxel, type VoxelModel } from "./grid";
+import { finish } from "./steps";
 
 export type DetailKind = "oak" | "cabin" | "pine" | "rock" | "ground" | "pond";
 
 export function detailModel(base: VoxelModel, seed: number, kind: DetailKind): VoxelModel {
+  return finish(detailLayers(base, seed, kind));
+}
+
+export function* detailLayers(base: VoxelModel, seed: number, kind: DetailKind) {
   const m = model(base.width * 2, base.height * 2, base.depth * 2);
   for (let y = 0; y < m.height; y++) for (let z = 0; z < m.depth; z++) for (let x = 0; x < m.width; x++) {
+    if (!x && z % 16 === 0) yield;
     const ox = Math.floor(x / 2), oy = Math.floor(y / 2), oz = Math.floor(z / 2);
     let index = voxel(base, ox, oy, oz);
     if (!index) continue;

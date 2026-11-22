@@ -80,6 +80,9 @@ void it("grows at original anchors and restores exact matrices without compoundi
   for (let i = 0; i < 3; i++) { reveal.update(1, 0); reveal.update(0.5, 0); }
   reveal.update(1, 0);
   assert.deepEqual(Array.from(object.instanceMatrix.array), before);
+  const version = object.instanceMatrix.version;
+  reveal.update(1, 0.016);
+  assert.equal(object.instanceMatrix.version, version);
   reveal.update(0, 0);
   assert.equal(object.visible, false);
   reveal.update(1, 0);
@@ -105,14 +108,18 @@ void it("draws exactly one complete LOD per instance without changing its materi
   const swap = createLodSwap(low, high, originals);
   for (const selection of [[false, true], [true, false], [true, true], [false, false]]) {
     swap(selection);
-    for (let i = 0; i < 2; i++) {
-      low.getMatrixAt(i, matrix); assert.equal(matrix.determinant() !== 0, !selection[i]);
-      high.getMatrixAt(i, matrix); assert.equal(matrix.determinant() !== 0, selection[i]);
+    for (const [batch, close] of [[low, false], [high, true]]) {
+      const drawn = originals.filter((_, i) => selection[i] === close);
+      assert.equal(batch.count, drawn.length);
+      drawn.forEach((original, i) => { batch.getMatrixAt(i, matrix); assert.deepEqual(matrix, original); });
     }
   }
   assert.ok(low.material.onBeforeCompile === compile);
   const version = low.instanceMatrix.version;
   swap([false, false]); assert.equal(low.instanceMatrix.version, version);
+  swap([true, true], [false, true]);
+  assert.equal(low.count, 0); assert.equal(high.count, 1);
+  high.getMatrixAt(0, matrix); assert.deepEqual(matrix, originals[1]);
   assert.throws(() => swap([]), RangeError);
   assert.throws(() => createLodSwap(mesh(0), high, originals), RangeError);
   const emptyLow = mesh(0), emptyHigh = mesh(0);

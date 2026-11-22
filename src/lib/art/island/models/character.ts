@@ -3,6 +3,13 @@ import { fill, model, voxel, type VoxelModel } from "../voxel/grid";
 export const CHARACTER_HEAD = 24;
 export const CHARACTER_SCALE = 1.575 / 32;
 
+// Front of the eight-pixel head, brow to chin.
+const FACE = [
+  "hhhhHHhh", "hHHhhhHh", "hssssssh", "ssSsssSs",
+  "swpsspws", "sssnnsss", "ssbNNbss", "ssbbbbss",
+];
+const INK: Record<string, number> = { h: 26, H: 25, s: 24, S: 38, w: 27, p: 28, n: 32, N: 32, b: 39 };
+
 export function character(): VoxelModel {
   const m = model(16, 32, 8);
   fill(m, (x, y, z) => {
@@ -20,14 +27,10 @@ export function character(): VoxelModel {
       return (Math.floor(x + 8) + y * 3) % 11 === 0 ? 35 : 29;
     }
     if (y >= CHARACTER_HEAD && Math.abs(x) < 4) {
-      if (y >= 30 || z < -2 || Math.abs(x) > 2.5 && y >= 28) return 26;
-      if (z > 2.5) {
-        if (y === 29) return 26;
-        if (y === 28 && Math.abs(x) > 1 && Math.abs(x) < 3) return Math.abs(x) < 2 ? 28 : 27;
-        if (y === 27 && Math.abs(x) < 1) return 32;
-        if (y < 27 && Math.abs(x) < 2) return y === 26 && Math.abs(x) < 1 ? 32 : 39;
-      }
-      return 24;
+      if (z > 3) return INK[FACE[31 - y][x + 3.5]];
+      if (y >= 30 || z < -2 || Math.abs(x) > 2.5 && (y >= 28 || z < -0.5 && y > 25))
+        return x < -1 && z > -2 && z < 2 || x > 0 && x < 3 && z < 0 && y > 28 ? 25 : 26;
+      return Math.abs(x) > 2.5 && Math.abs(z) < 1 && y === 27 ? 38 : 24;
     }
     return 0;
   });

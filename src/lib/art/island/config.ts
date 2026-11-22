@@ -11,7 +11,7 @@ export const CAMERA = {
 };
 export const PLAYER = {
   speed: 3.3, sprint: 1.6, radius: 0.34, worldRadius: 18,
-  driftSeconds: 1.8, awayDistance: 0.7, noteDistance: 2.35,
+  awayDistance: 0.7, noteDistance: 2.35,
   stepRate: 8, bobHeight: 0.065,
 };
 export const DETAIL = {
