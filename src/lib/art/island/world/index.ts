@@ -11,7 +11,7 @@ import { pineSpots, pineObstacles } from "./trees";
 import { random, type Obstacle } from "../math";
 import { bakeStack } from "../voxel/bake";
 import { fill, model } from "../voxel/grid";
-import { PALETTE } from "../models/palette";
+import { PALETTE, CHARACTER_PALETTE } from "../models/palette";
 import { island } from "../models/ground";
 import { pine } from "../models/pine";
 import { greatTree } from "../models/oak";
@@ -72,7 +72,7 @@ export function createWorld(seed: number) {
     { kind: "rock", mesh: rocks, make: () => rock(seed) },
     { kind: "pond", mesh: pond, make: () => water },
   ]);
-  const walkerBaked = bakeStack(character(), PALETTE, { topTint: 0 });
+  const walkerBaked = bakeStack(character(), CHARACTER_PALETTE, { topTint: 0 });
   const walker = new THREE.Mesh(walkerBaked.geometry, walkerBaked.material);
   walker.scale.setScalar(CHARACTER_SCALE); scene.add(walker);
   const avatar = createAvatar(walker);

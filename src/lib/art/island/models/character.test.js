@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import * as THREE from "three";
 import { character, CHARACTER_HEAD, CHARACTER_SCALE } from "./character.ts";
 import { voxel } from "../voxel/grid.ts";
-import { PALETTE } from "./palette.ts";
+import { PALETTE, CHARACTER_PALETTE } from "./palette.ts";
 import { createAvatar } from "../life/avatar.ts";
 
 void it("uses an eight-cube head, twelve-high body and limbs at the existing world-space height", () => {
@@ -22,11 +22,13 @@ void it("uses an eight-cube head, twelve-high body and limbs at the existing wor
   assert.equal(voxel(m, 5, 28, 7), 27);
   assert.equal(voxel(m, 6, 28, 7), 28);
   assert.equal(voxel(m, 7, 24, 7), 26);
-  assert.ok(m.cells.every((c) => c < PALETTE.length));
+  assert.ok(m.cells.every((c) => c < CHARACTER_PALETTE.length));
 });
 
-void it("keeps the original palette indices unchanged and appends the character colors", () => {
-  assert.deepEqual(PALETTE.slice(0, 24), ["#000000", "#152330", "#3f374c", "#71586a", "#ab887e", "#193b48", "#285969", "#43808a", "#8cb9aa", "#365959", "#527567", "#ada99a", "#808b8c", "#52627b", "#8195a8", "#b7c9cc", "#d18f58", "#ffd58a", "#ffe9b2", "#a95d69", "#d38483", "#eee1c1", "#557594", "#84a6b4"]);
+void it("keeps the original world palette intact and isolates the unchanged character colors", () => {
+  assert.deepEqual(PALETTE, ["#000000", "#152330", "#3f374c", "#71586a", "#ab887e", "#193b48", "#285969", "#43808a", "#8cb9aa", "#365959", "#527567", "#ada99a", "#808b8c", "#52627b", "#8195a8", "#b7c9cc", "#d18f58", "#ffd58a", "#ffe9b2", "#a95d69", "#d38483", "#eee1c1", "#557594", "#84a6b4"]);
+  assert.deepEqual(CHARACTER_PALETTE.slice(0, PALETTE.length), PALETTE);
+  assert.deepEqual(CHARACTER_PALETTE.slice(PALETTE.length), ["#b8896a", "#3e291e", "#674331", "#f4f3ed", "#5b52a3", "#16b3b0", "#4148a0", "#45474e", "#9f6f51", "#323b78"]);
 });
 
 void it("turns only the new head, breathes at its configured scale and restores that scale on movement", () => {

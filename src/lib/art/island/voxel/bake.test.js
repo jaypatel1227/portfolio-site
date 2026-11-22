@@ -7,7 +7,7 @@ import { greatTree } from "../models/oak.ts";
 import { pine } from "../models/pine.ts";
 import { rock } from "../models/rock.ts";
 import { character } from "../models/character.ts";
-import { PALETTE } from "../models/palette.ts";
+import { PALETTE, CHARACTER_PALETTE } from "../models/palette.ts";
 
 void describe("voxel models", () => {
   void it("rejects invalid grid dimensions", () => {
@@ -78,15 +78,15 @@ void describe("slice baking", () => {
 
   void it("preserves default sky tint but keeps every character top-hair texel brown when disabled", () => withCanvas((_canvas, pixels) => {
     const m = character();
-    const tinted = bakeStack(m, PALETTE);
+    const tinted = bakeStack(m, CHARACTER_PALETTE);
     const defaultTop = pixels.get("24,44");
-    const untinted = bakeStack(m, PALETTE, { topTint: 0 });
+    const untinted = bakeStack(m, CHARACTER_PALETTE, { topTint: 0 });
     assert.notEqual(pixels.get("24,44"), defaultTop);
     for (let x = 4; x < 12; x++) for (let z = 0; z < 8; z++) {
       const color = new THREE.Color(pixels.get(`${16 + x},${40 + z}`));
       assert.ok(color.r > color.g && color.g > color.b);
     }
-    const expected = new THREE.Color(PALETTE[26]).multiplyScalar(0.72 + 0.36 * 31 / 32);
+    const expected = new THREE.Color(CHARACTER_PALETTE[26]).multiplyScalar(0.72 + 0.36 * 31 / 32);
     assert.equal(pixels.get("24,44"), `#${expected.getHexString()}`);
     assert.equal(defaultTop, `#${expected.lerp(new THREE.Color("#98b6c5"), 0.18).getHexString()}`);
     for (const b of [tinted, untinted]) { b.geometry.dispose(); b.material.map.dispose(); b.material.dispose(); }
