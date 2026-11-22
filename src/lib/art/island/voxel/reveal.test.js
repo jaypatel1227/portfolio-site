@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import * as THREE from "three";
 import { approachReveal, lodNearby, staggerReveal, zoomReveal } from "./reveal-math.ts";
 import { createReveal } from "./reveal.ts";
-import { createLodSwap } from "./lod.ts";
+import { createLodSwap, normalizeLodGeometry } from "./lod.ts";
 
 void it("reveals gradually inside each zoom band, with identical values in either direction", () => {
   for (const [threshold, band] of [[18, 4], [10, 2]]) {
@@ -118,4 +118,15 @@ void it("draws exactly one complete LOD per instance without changing its materi
   const emptyLow = mesh(0), emptyHigh = mesh(0);
   createLodSwap(emptyLow, emptyHigh, [])([]);
   assert.equal(emptyLow.visible, false); assert.equal(emptyHigh.visible, false);
+});
+
+void it("aligns high-density ground and water surfaces with their original voxel bounds", () => {
+  for (const height of [1, 7, 27]) {
+    const low = new THREE.BoxGeometry(3, height, 5).translate(0, (height - 1) / 2, 0);
+    const high = new THREE.BoxGeometry(6, height * 2, 10).translate(0, (height * 2 - 1) / 2, 0);
+    normalizeLodGeometry(high, 2); low.computeBoundingBox(); high.computeBoundingBox();
+    assert.deepEqual(high.boundingBox, low.boundingBox);
+  }
+  normalizeLodGeometry(new THREE.BufferGeometry(), 2);
+  assert.throws(() => normalizeLodGeometry(new THREE.BufferGeometry(), 0), RangeError);
 });

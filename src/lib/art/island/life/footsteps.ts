@@ -55,10 +55,10 @@ export function createFootsteps(batch: Batch, rng: () => number): AnimationSyste
       }
       for (let i = 0; i < splashes.length; i++) {
         const splash = splashes[i], t = (time - splash.born) / 0.9, active = t >= 0 && t < 1;
-        instance(rings, i, splash.x, 0.14, splash.z, active ? (0.02 + t * 0.09) * (1 - smooth((t - 0.6) / 0.4)) : 0);
+        instance(rings, i, splash.x, 0.26, splash.z, active ? (0.02 + t * 0.09) * (1 - smooth((t - 0.6) / 0.4)) : 0);
         for (let j = 0; j < 3; j++) {
           const angle = j * Math.PI * 2 / 3 + i;
-          instance(drops, i * 3 + j, splash.x + Math.sin(angle) * t * 0.5, 0.1 + Math.sin(t * Math.PI) * 0.45, splash.z + Math.cos(angle) * t * 0.5, active ? 0.028 * (1 - t) : 0);
+          instance(drops, i * 3 + j, splash.x + Math.sin(angle) * t * 0.5, 0.26 + Math.sin(t * Math.PI) * 0.45, splash.z + Math.cos(angle) * t * 0.5, active ? 0.028 * (1 - t) : 0);
         }
       }
       dust.instanceMatrix.needsUpdate = true;

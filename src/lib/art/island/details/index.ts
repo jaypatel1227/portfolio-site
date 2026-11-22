@@ -9,7 +9,7 @@ import { createSmallProps } from "./props";
 import { bakeStack } from "../voxel/bake";
 import { type VoxelModel } from "../voxel/grid";
 import { lodNearby, zoomReveal } from "../voxel/reveal-math";
-import { createLodSwap } from "../voxel/lod";
+import { createLodSwap, normalizeLodGeometry } from "../voxel/lod";
 
 interface Source { kind: DetailKind; mesh: THREE.InstancedMesh; make: () => VoxelModel }
 
@@ -39,7 +39,7 @@ export function createDetails(seed: number, batch: Batch, sky: THREE.Group, obst
     const entry = entries.find((e) => !e.high && needed(e));
     if (entry) {
       const baked = bakeStack(detailModel(entry.make(), seed, entry.kind), PALETTE);
-      baked.geometry.scale(0.5, 0.5, 0.5);
+      normalizeLodGeometry(baked.geometry, 2);
       const baseMaterial = entry.mesh.material as THREE.MeshBasicMaterial;
       baked.material.onBeforeCompile = baseMaterial.onBeforeCompile.bind(baseMaterial);
       baked.material.customProgramCacheKey = baseMaterial.customProgramCacheKey.bind(baseMaterial);

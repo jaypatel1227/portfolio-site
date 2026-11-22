@@ -63,6 +63,7 @@ export function createRuntime(canvas: HTMLCanvasElement, bridge: Bridge, signal:
     dispose() { renderer.dispose(); world.dispose(); },
     debug: {
       player,
+      camera: view.camera,
       teleport(x: number, z: number) { player.x = x; player.z = z; setPhase("away"); },
       rotate(angle: number) { view.rotate(angle); },
       get yaw() { return view.yaw; }, get enabled() { return enabled; },
