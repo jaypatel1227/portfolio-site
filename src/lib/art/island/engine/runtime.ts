@@ -32,7 +32,7 @@ export function createRuntime(canvas: HTMLCanvasElement, bridge: Bridge, signal:
     world.shadow.position.x = player.x; world.shadow.position.z = player.z;
     world.update(time, player, motion, dt, vertical, view.camera);
     bridge.note(enabled && !drift && Math.hypot(player.x - NOTE.x, player.z - NOTE.z) < PLAYER.noteDistance);
-    renderer.render(world.scene, view.camera, width, height, pixelScale(vertical, width));
+    renderer.render(world.scene, view.camera, pixelScale(vertical, width));
   }
   function frame(now: number, dt: number): void {
     let motion = 0;
@@ -67,6 +67,7 @@ export function createRuntime(canvas: HTMLCanvasElement, bridge: Bridge, signal:
       get yaw() { return view.yaw; }, get enabled() { return enabled; },
       get zoom() { return view.zoom; }, get vertical() { return view.vertical; },
       get detailCount() { return world.detailCount; }, get framing() { return view.framing; },
+      get detailState() { return world.detailState; }, get resolution() { return renderer.resolution; },
       get renderInfo() { return renderer.info; }, get memory() { return renderer.memory; },
     },
   };

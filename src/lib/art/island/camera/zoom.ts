@@ -32,5 +32,5 @@ export function createZoom(initial: number) {
 }
 
 export function pixelScale(vertical: number, width: number): number {
-  return vertical <= 10 ? 1 : vertical <= 22 || width < 1024 ? 2 : 3;
+  return width < 1024 ? 2 : 1 + smooth((vertical - 8) / 4) + smooth((vertical - 20) / 4);
 }

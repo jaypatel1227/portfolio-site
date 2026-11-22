@@ -14,6 +14,16 @@ void it("increases pixel resolution close up without changing narrow still-frame
   assert.equal(pixelScale(100, 390), 2);
 });
 
+void it("blends pixel grids continuously across both former resolution steps in either direction", () => {
+  for (const center of [10, 22]) {
+    const values = [];
+    for (let i = 0; i <= 100; i++) values.push(pixelScale(center - 2 + i * 0.04, 1440));
+    for (let i = 1; i < values.length; i++) assert.ok(values[i] >= values[i - 1] && values[i] - values[i - 1] < 0.016);
+    for (let i = 100; i >= 0; i--) assert.equal(pixelScale(center - 2 + i * 0.04, 1440), values[i]);
+    assert.ok(Math.abs(pixelScale(center + 0.001, 1440) - pixelScale(center - 0.001, 1440)) < 0.001);
+  }
+});
+
 void it("keeps first zoom-out at the resting limit and zooms in from the displayed height", () => {
   for (const exponent of [0.04, 0.24, 1]) {
     const zoom = createZoom(60);

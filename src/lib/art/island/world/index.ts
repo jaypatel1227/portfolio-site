@@ -78,13 +78,14 @@ export function createWorld(seed: number) {
     scene, obstacles, walker, shadow, sky,
     dispose() { details.dispose(); disposeScene(scene); },
     get detailCount() { return details.built; },
+    get detailState() { return details.state; },
     setView(camera: THREE.OrthographicCamera) {
       setSkyView(camera);
       life.setView(camera);
     },
     update(time: number, player: { x: number; z: number }, motion: number, dt: number, vertical: number, camera: THREE.OrthographicCamera) {
       life.update({ time, player, motion, dt });
-      details.update(vertical, player, time, camera);
+      details.update(vertical, player, time, camera, dt);
       fireflies.update({ time, player, motion, dt });
       pond.position.y = Math.sin(time * 0.6) * 0.015;
     },
