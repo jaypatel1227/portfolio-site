@@ -43,26 +43,30 @@ export function createFootsteps(batch: Batch, rng: () => number): AnimationSyste
           splash.x = -8 + (player.x + 8) * 0.92; splash.z = 1 + (player.z - 1) * 0.92; splash.born = time;
         }
       }
+      dust.count = prints.count = rings.count = drops.count = 0;
       for (let i = 0; i < footsteps.length; i++) {
         const foot = footsteps[i];
         const t = (time - foot.born) / 0.7;
-        instance(dust, i, foot.x + Math.cos(foot.angle) * t * 0.3, 0.08 + t * 0.25, foot.z + Math.sin(foot.angle) * t * 0.3, t >= 0 && t < 1 ? (1 - t) * 0.05 : 0);
+        if (t >= 0 && t < 1) instance(dust, dust.count++, foot.x + Math.cos(foot.angle) * t * 0.3, 0.08 + t * 0.25, foot.z + Math.sin(foot.angle) * t * 0.3, (1 - t) * 0.05);
       }
       for (let i = 0; i < marks.length; i++) {
         const mark = marks[i], age = time - mark.born;
         const size = age >= 0 ? 0.035 * smooth(age / 0.08) * (1 - smooth((age - 5) / 2)) : 0;
-        instance(prints, i, mark.x, 0.035, mark.z, size, mark.angle);
+        if (size > 0) instance(prints, prints.count++, mark.x, 0.035, mark.z, size, mark.angle);
       }
       for (let i = 0; i < splashes.length; i++) {
         const splash = splashes[i], t = (time - splash.born) / 0.9, active = t >= 0 && t < 1;
-        instance(rings, i, splash.x, 0.26, splash.z, active ? (0.02 + t * 0.09) * (1 - smooth((t - 0.6) / 0.4)) : 0);
+        if (!active) continue;
+        instance(rings, rings.count++, splash.x, 0.26, splash.z, (0.02 + t * 0.09) * (1 - smooth((t - 0.6) / 0.4)));
         for (let j = 0; j < 3; j++) {
           const angle = j * Math.PI * 2 / 3 + i;
-          instance(drops, i * 3 + j, splash.x + Math.sin(angle) * t * 0.5, 0.26 + Math.sin(t * Math.PI) * 0.45, splash.z + Math.cos(angle) * t * 0.5, active ? 0.028 * (1 - t) : 0);
+          instance(drops, drops.count++, splash.x + Math.sin(angle) * t * 0.5, 0.26 + Math.sin(t * Math.PI) * 0.45, splash.z + Math.cos(angle) * t * 0.5, 0.028 * (1 - t));
         }
       }
-      dust.instanceMatrix.needsUpdate = true;
-      prints.instanceMatrix.needsUpdate = true; rings.instanceMatrix.needsUpdate = true; drops.instanceMatrix.needsUpdate = true;
+      for (const mesh of [dust, prints, rings, drops]) {
+        mesh.visible = mesh.count > 0;
+        if (mesh.visible) mesh.instanceMatrix.needsUpdate = true;
+      }
     },
   };
 }

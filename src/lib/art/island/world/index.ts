@@ -4,6 +4,7 @@ import { TRACK, carryDelta, trackContact, nearTrack, trackFootprints } from "./c
 import { createLightPool } from "./light-pool";
 import { createFireflies } from "../life/fireflies";
 import { createBatch } from "../voxel/batch";
+import { createReveal } from "../voxel/reveal";
 import { NOTE, stoneSpots, floraSpots } from "./layout";
 import { disposeScene } from "./resources";
 import * as THREE from "three";
@@ -75,6 +76,8 @@ export function createWorld(seed: number) {
   const clear = (p: { x: number; z: number }) => !nearTrack(p, 0.35) && !exhibitFootprints.some((e) => Math.hypot(p.x - e.x, p.z - e.z) < e.r + 0.35);
   const flora = plants.flora.filter(clear), tufts = plants.tufts.filter(clear);
   const grassMesh = batch(grass(), tufts), mushrooms = batch(mushroom(), flora);
+  const grassView = createReveal([grassMesh], 13);
+  const projection = new THREE.Matrix4(), frustum = new THREE.Frustum();
   const life = createLife(seed, batch, sky, obstacles, { pines, oak, grass: grassMesh, mushrooms, flora, lamps: lanterns, pools });
   const details = createDetails(seed, batch, scene, sky, clearings, [
     { kind: "ground", mesh: ground, base: groundVoxels },
@@ -104,6 +107,8 @@ export function createWorld(seed: number) {
     get detailCount() { return details.built; },
     get detailState() { return details.state; },
     setView(camera: THREE.OrthographicCamera) {
+      camera.updateMatrixWorld();
+      frustum.setFromProjectionMatrix(projection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
       setSkyView(camera);
       life.setView(camera);
     },
@@ -111,7 +116,8 @@ export function createWorld(seed: number) {
       frame.time = time; frame.player = player; frame.motion = motion; frame.dt = dt;
       updateBelt(dt);
       life.update(frame); clouds.update(frame); avatar.update(frame);
-      details.update(vertical, player, time, camera, dt);
+      grassView.update(1, 0, undefined, frustum);
+      details.update(vertical, player, time, camera, dt, frustum);
       fireflies.update(frame);
       pond.position.y = Math.sin(time * 0.6) * 0.015;
     },

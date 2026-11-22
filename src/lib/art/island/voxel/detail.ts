@@ -30,12 +30,12 @@ export function* detailLayers(base: VoxelModel, seed: number, kind: DetailKind) 
       if (px > 7 && px < 11 && pz < -2 && py > 22) index = y % 4 === 0 || (x + Math.floor(y / 4) * 3) % 8 === 0 ? 13 : 4;
       if (index === 17 && noise < 22) index = 18;
     } else if (kind === "rock") {
-      if (Math.sin(px * 0.8 + py * 0.9 + Math.sin(pz)) > 0.94) index = 13;
-      else if (py > base.height * 0.5 && noise < 32) index = noise < 12 ? 10 : 6;
+      const lichen = Math.sin(px * 0.53 + pz * 0.3) + Math.cos(pz * 0.88 - py * 0.35);
+      if (py > base.height * 0.48 && lichen > 1.15 + noise * 0.002) index = lichen > 1.65 ? 8 : 10;
     } else if (kind === "pine" && index >= 6 && index <= 8) {
-      index = y % 4 === 0 ? 8 : noise < 20 ? 7 : 6;
+      if (index === 7 && (x + 2 * z + Math.floor(py)) % 11 === 0 && noise < 70) index = 8;
     } else if (kind === "ground" && oy === base.height - 1) {
-      if (index === 11 || index === 12) index = noise < 7 ? 13 : noise < 17 ? 12 : 11;
+      if (index === 11 || index === 12) { if (noise < 4) index = 13; }
       else if (noise < 6) index = 10;
     } else if (kind === "pond") {
       index = Math.sin(px * 1.9 + pz * 2.1) > 0.93 ? 23 : noise < 10 ? 6 : 22;

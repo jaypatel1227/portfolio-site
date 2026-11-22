@@ -4,12 +4,15 @@ import { sculpture, type XYZ } from "./sculpt";
 export function orrery() {
   const s = sculpture(99, 34, 75);
   const brass = "#a38150", shadow = "#403845", rim = "#d3af72";
-  s.orb([0, 1, 0], [12, 2, 10], shadow);
-  s.orb([0, 3, 0], [9, 2, 8], brass);
+  s.orb([0, 1, 0], [14, 2, 12], shadow);
+  s.orb([0, 3, 0], [12, 2, 10], (x, _y, z) => Math.hypot(x, z * 1.2) > 8 && Math.cos(Math.atan2(z, x) * 12) > 0.4 ? rim : brass);
+  s.orb([0, 5, 0], [7, 1, 6], "#665047");
   s.box(-1, 4, -1, 1, 15, 1, rim);
   function pin(x: number, y: number, z: number) {
-    s.rod([0, 5, 0], [x, 5, z], 0, brass);
-    s.rod([x, 5, z], [x, y, z], 0, rim);
+    const elbow: XYZ = [Math.round(x * 0.55 - z * 0.15), 6, Math.round(z * 0.55 + x * 0.15)];
+    s.rod([0, 5, 0], elbow, 1, brass); s.rod(elbow, [x, 6, z], 1, brass);
+    s.orb(elbow, [2, 1, 2], rim);
+    s.rod([x, 6, z], [x, y, z], 0, rim);
   }
   function body(at: XYZ, r: number, ink: (x: number, y: number, z: number) => string | null) {
     pin(at[0], at[1], at[2]); s.orb(at, [r, r, r], ink);

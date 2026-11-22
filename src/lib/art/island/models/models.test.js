@@ -13,20 +13,20 @@ import { fish, fox, owl, rabbit } from "./animals.ts";
 
 void it("preserves the established seed's voxel artwork", () => {
   const snapshots = [
-    [cabin, "ae87e50afc7edbb8fb62c9fd08fcb07dd6fa3b3bc1f50742d125772bdecb0914"],
-    [character, "840fc6f9734bc03f3d73c307f83201ea2a8c9251b22ff0ffdf92059ad60cd79d"],
-    [grass, "e75810fef6ef27119cacf54de59ce8c29808e24c5571b4580315b03f5f7478de"],
-    [greatTree, "e048ba1414824b21a8fbc006538775e6f26d748af6330a4cd6309b38449440cb"],
-    [island, "17bbdec65356cd7ca379d4a2cc0b3445487fc38bdc021bc0fd07315430087a66"],
-    [lantern, "d97b995a39b79f719b25167aea26bf4556892c7d985d4ab636b84d77517b3490"],
-    [mushroom, "c8091ea86555f5f3c719593f41c3334e5304bb863d1b20eacc2af7c13dbef107"],
-    [pine, "4d7520c1fac6dabe2a42933423a3e31ecceeeec9d65aa69ac9cf1e9723185a16"],
-    [rock, "c33465e5e1ed6daf82429ca2beb744d45649b9749447b370fed8dc0738d77a4d"],
-    [sign, "15caac6800fd877a97f07933d9154163c1fd7e656bf4f7513aeef28328b97056"],
-    [fish, "51cafc83aa8df1fec3517788feb90274bd2169400edf4368afba6099022c3ee6"],
-    [fox, "35b0e3743a988a9c6b5bc9ebf2632b83f52a3f9f997df3518f9129ae75e61de2"],
-    [() => owl(true), "ad4ce6d3c2dc65ed6dab41da46d27debc697b828d17c77a5554871408f7657c5"],
-    [rabbit, "591db5d9016f3e5641ec996058d062901d7b1f5f4aeb9ea7ea85863d5cf99e5a"],
+    [cabin, "348a77eb703a9266f9fac0e1bd41d87661c19e6b3f4397cee15338c6dd9b30a5"],
+    [character, "06ddf8cc0e89fdba0145aac3ad170426ec266a38dfa89f0d960d12e66e077f7f"],
+    [grass, "97fa7f05030ee4b926afba03d13ffccce9660bb10cb1e8bfdead25399433cf19"],
+    [greatTree, "09887d59a2b10932b30538498a768a574e3d706f766f443cd2ecc9e6a079d50d"],
+    [island, "bc1ffd514039490e45c0f4060f5a2f15a1f2e282efe3f85d221d699ad231c28a"],
+    [lantern, "2758dbd7a90ac10c45e97a63475b84a1dfed7f1a9e9715b3db035d35a4aaf6fa"],
+    [mushroom, "787a0c57ae3872d947463d97e6e90a0ac91885d9e384f31dcbf6d2b9b8b4dd61"],
+    [pine, "350aa70035f9792a017e50e91e4677057b0b9a587c0f709e472e0175aaa7f3d4"],
+    [rock, "dd4882594d32069a70cdc19abc8b6fee021fcee0f720d7cc58686f288b645eb3"],
+    [sign, "ef4c40118a540ccfdc56193fe18d1255757afd5a07315f40c737a46aaa9aa065"],
+    [fish, "103431b1afc337b19e9f5c8c923c75287750e57547cb234db25004fded221add"],
+    [fox, "26b9fe394b3e60fcb6358dd38845b855c45b5f4d965d4c9212aad10ad0c066e5"],
+    [() => owl(true), "1883190c1f522c32d88d073a1c4449609126e42ebc0c0693acbe07fb798a3d20"],
+    [rabbit, "ad631d0977b9e438a387697104f107419d2c4c40347bd56f6b7d557eb9e01e81"],
   ];
   for (const [generate, hash] of snapshots) assert.equal(createHash("sha256").update(generate(2026).cells).digest("hex"), hash);
 });

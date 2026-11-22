@@ -5,6 +5,7 @@ import { bird, insect } from "../models/ambient.ts";
 import { flightLift, proximity, onPath, shoreBand, createIdlePose } from "./behavior.ts";
 import { createBirds } from "./birds.ts";
 import { createInsects } from "./insects.ts";
+import { createFootsteps } from "./footsteps.ts";
 
 function fakeBatch(meshes) {
   return (_model, spots) => {
@@ -28,6 +29,17 @@ void it("finds reachable shore contact and keeps prints on the path", () => {
   assert.equal(onPath(2, 12), true); assert.equal(onPath(-8, 1), false);
   assert.equal(shoreBand(-3.5, 1), 1);
   assert.equal(shoreBand(-8, 1), 0); assert.equal(shoreBand(12, 12), 0);
+});
+
+void it("submits only live footstep particles and releases their slots after fading", () => {
+  const meshes = [], steps = createFootsteps(fakeBatch(meshes), () => 0.5);
+  const update = (x, time, motion) => steps.update({ time, player: { x, z: 12 }, dt: 0.05, motion });
+  update(1.6, 0, 0);
+  assert.ok(meshes.every((m) => !m.visible && m.count === 0));
+  update(2, 0.1, 1); update(2, 0.2, 0);
+  assert.deepEqual(meshes.map((m) => m.count), [1, 1, 0, 0]);
+  update(2, 10, 0);
+  assert.ok(meshes.every((m) => !m.visible && m.count === 0));
 });
 
 void it("reuses idle state, settles into a look-around and resets on movement or still frames", () => {

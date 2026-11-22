@@ -100,6 +100,22 @@ void it("uses fresh animation matrices and accepts empty detail batches", () => 
   assert.equal(createReveal([mesh(0)]).update(0, 0), 0);
 });
 
+void it("compacts static instances as the camera moves, retaining original scales and anchors", () => {
+  const object = mesh(32), before = object.instanceMatrix.array.slice();
+  const reveal = createReveal([object], 0), matrix = new THREE.Matrix4();
+  const camera = new THREE.OrthographicCamera(-5, 5, 5, -5, 0.1, 50);
+  function pan(x) {
+    camera.position.set(x, 0, 20); camera.updateMatrixWorld();
+    const frustum = new THREE.Frustum().setFromProjectionMatrix(new THREE.Matrix4().multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
+    reveal.update(1, 0, undefined, frustum);
+  }
+  pan(0); assert.ok(object.count > 0 && object.count < 16);
+  pan(62); object.getMatrixAt(0, matrix); assert.ok(matrix.elements[12] > 40);
+  pan(100); assert.equal(object.count, 0); assert.equal(object.visible, false);
+  reveal.update(1, 0); assert.equal(object.count, 32); assert.equal(object.visible, true);
+  assert.deepEqual(object.instanceMatrix.array, before);
+});
+
 void it("draws exactly one complete LOD per instance without changing its material", () => {
   const low = mesh(), high = mesh(), matrix = new THREE.Matrix4();
   const originals = [0, 1].map((i) => { const m = new THREE.Matrix4(); low.getMatrixAt(i, m); return m; });

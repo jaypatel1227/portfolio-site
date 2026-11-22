@@ -22,7 +22,7 @@ function* buildLod(source: Source, seed: number) {
 
 export function createDetails(seed: number, batch: Batch, scene: THREE.Scene, sky: THREE.Group, obstacles: Obstacle[], sources: Source[]) {
   const collection = createCollection(scene);
-  const position = new THREE.Vector3(), projection = new THREE.Matrix4(), frustum = new THREE.Frustum();
+  const position = new THREE.Vector3();
   const entries = sources.map((source) => ({
     ...source,
     originals: Array.from({ length: source.mesh.count }, (_, i) => { const m = new THREE.Matrix4(); source.mesh.getMatrixAt(i, m); return m; }),
@@ -83,7 +83,7 @@ export function createDetails(seed: number, batch: Batch, scene: THREE.Scene, sk
     get state() {
       return { scenery: scenery?.amount ?? 0, discoveries: small?.amount ?? 0, lod: entries.map((e) => e.selected.map(Number)) };
     },
-    update(vertical: number, player: Point, time: number, camera: THREE.OrthographicCamera, dt: number) {
+    update(vertical: number, player: Point, time: number, camera: THREE.OrthographicCamera, dt: number, frustum: THREE.Frustum) {
       preloading = vertical < DETAIL.preloadHeight; latestPlayer = player;
       collecting = vertical < DETAIL.sceneryHeight + DETAIL.sceneryBand;
       zoomed = lodNearby(vertical, DETAIL.lodHeight, zoomed, DETAIL.lodBand);
@@ -92,10 +92,6 @@ export function createDetails(seed: number, batch: Batch, scene: THREE.Scene, sk
         scheduled = true;
         if ("requestIdleCallback" in window) window.requestIdleCallback(build, { timeout: 32 });
         else setTimeout(build, 0);
-      }
-      if (zoomed) {
-        camera.updateMatrixWorld();
-        frustum.setFromProjectionMatrix(projection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
       }
       for (const entry of entries) {
         if (!entry.high) continue;
@@ -107,8 +103,8 @@ export function createDetails(seed: number, batch: Batch, scene: THREE.Scene, sk
         entry.swap!(entry.selected, entry.visible);
         entry.high.position.copy(entry.mesh.position);
       }
-      scenery?.update(amount, time, dt);
-      collection.update(amount, player, dt);
+      scenery?.update(amount, time, dt, frustum);
+      collection.update(amount, player, dt, time);
       small?.update(time, player, zoomReveal(vertical, DETAIL.discoveryHeight, DETAIL.discoveryBand), camera, dt);
     },
   };

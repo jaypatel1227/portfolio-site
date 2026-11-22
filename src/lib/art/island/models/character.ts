@@ -23,6 +23,8 @@ export function character(): VoxelModel {
       const body = Math.abs(x) < 4, side = body ? Math.abs(x) > 2.5 : Math.abs(x) > 6.5;
       if (!body && y < 20) return side || z < -0.5 || y === 12 ? 38 : 24;
       if (body && z > 0.5 && (y === 23 && Math.abs(x) < 2 || y === 22 && Math.abs(x) < 1)) return 24;
+      if (body && z < -0.5 && y > 12 && y < 23) return Math.abs(x) > 2 || y === 21 ? 34 : 29;
+      if (!body && z > 0.5 && y === 23 && !side) return 35;
       if (side || z < -0.5 || y === 12) return 34;
       return (Math.floor(x + 8) + y * 3) % 11 === 0 ? 35 : 29;
     }
