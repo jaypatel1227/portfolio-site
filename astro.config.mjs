@@ -9,5 +9,19 @@ export default defineConfig({
   integrations: [sitemap()],
   vite: {
     plugins: [tailwindcss()],
+    build: {
+      rolldownOptions: {
+        output: {
+          codeSplitting: {
+            groups: [
+              {
+                name: "three",
+                test: /node_modules[\\/]three[\\/]/,
+              },
+            ],
+          },
+        },
+      },
+    },
   },
 });

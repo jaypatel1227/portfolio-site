@@ -80,6 +80,9 @@ void it("grows at original anchors and restores exact matrices without compoundi
   for (let i = 0; i < 3; i++) { reveal.update(1, 0); reveal.update(0.5, 0); }
   reveal.update(1, 0);
   assert.deepEqual(Array.from(object.instanceMatrix.array), before);
+  const version = object.instanceMatrix.version;
+  reveal.update(1, 0.016);
+  assert.equal(object.instanceMatrix.version, version);
   reveal.update(0, 0);
   assert.equal(object.visible, false);
   reveal.update(1, 0);
@@ -97,6 +100,22 @@ void it("uses fresh animation matrices and accepts empty detail batches", () => 
   assert.equal(createReveal([mesh(0)]).update(0, 0), 0);
 });
 
+void it("compacts static instances as the camera moves, retaining original scales and anchors", () => {
+  const object = mesh(32), before = object.instanceMatrix.array.slice();
+  const reveal = createReveal([object], 0), matrix = new THREE.Matrix4();
+  const camera = new THREE.OrthographicCamera(-5, 5, 5, -5, 0.1, 50);
+  function pan(x) {
+    camera.position.set(x, 0, 20); camera.updateMatrixWorld();
+    const frustum = new THREE.Frustum().setFromProjectionMatrix(new THREE.Matrix4().multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
+    reveal.update(1, 0, undefined, frustum);
+  }
+  pan(0); assert.ok(object.count > 0 && object.count < 16);
+  pan(62); object.getMatrixAt(0, matrix); assert.ok(matrix.elements[12] > 40);
+  pan(100); assert.equal(object.count, 0); assert.equal(object.visible, false);
+  reveal.update(1, 0); assert.equal(object.count, 32); assert.equal(object.visible, true);
+  assert.deepEqual(object.instanceMatrix.array, before);
+});
+
 void it("draws exactly one complete LOD per instance without changing its material", () => {
   const low = mesh(), high = mesh(), matrix = new THREE.Matrix4();
   const originals = [0, 1].map((i) => { const m = new THREE.Matrix4(); low.getMatrixAt(i, m); return m; });
@@ -105,19 +124,34 @@ void it("draws exactly one complete LOD per instance without changing its materi
   const swap = createLodSwap(low, high, originals);
   for (const selection of [[false, true], [true, false], [true, true], [false, false]]) {
     swap(selection);
-    for (let i = 0; i < 2; i++) {
-      low.getMatrixAt(i, matrix); assert.equal(matrix.determinant() !== 0, !selection[i]);
-      high.getMatrixAt(i, matrix); assert.equal(matrix.determinant() !== 0, selection[i]);
+    for (const [batch, close] of [[low, false], [high, true]]) {
+      const drawn = originals.filter((_, i) => selection[i] === close);
+      assert.equal(batch.count, drawn.length);
+      drawn.forEach((original, i) => { batch.getMatrixAt(i, matrix); assert.deepEqual(matrix, original); });
     }
   }
   assert.ok(low.material.onBeforeCompile === compile);
   const version = low.instanceMatrix.version;
   swap([false, false]); assert.equal(low.instanceMatrix.version, version);
+  swap([true, true], [false, true]);
+  assert.equal(low.count, 0); assert.equal(high.count, 1);
+  high.getMatrixAt(0, matrix); assert.deepEqual(matrix, originals[1]);
   assert.throws(() => swap([]), RangeError);
   assert.throws(() => createLodSwap(mesh(0), high, originals), RangeError);
   const emptyLow = mesh(0), emptyHigh = mesh(0);
   createLodSwap(emptyLow, emptyHigh, [])([]);
   assert.equal(emptyLow.visible, false); assert.equal(emptyHigh.visible, false);
+});
+
+void it("culls base instances during a bake and restores their original slots when the LOD arrives", () => {
+  const low = mesh(), high = mesh(), m = new THREE.Matrix4();
+  const originals = [0, 1].map(i => { low.getMatrixAt(i, m); return m.clone(); });
+  createLodSwap(low, null, originals)([true, true], [false, true]);
+  assert.equal(low.count, 1); low.getMatrixAt(0, m); assert.deepEqual(m, originals[1]);
+  createLodSwap(low, high, originals)([true, false], [true, true]);
+  assert.equal(low.count, 1); assert.equal(high.count, 1);
+  low.getMatrixAt(0, m); assert.deepEqual(m, originals[1]);
+  high.getMatrixAt(0, m); assert.deepEqual(m, originals[0]);
 });
 
 void it("aligns high-density ground and water surfaces with their original voxel bounds", () => {

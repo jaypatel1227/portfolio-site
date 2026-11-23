@@ -5,24 +5,25 @@ export function normalizeLodGeometry(geometry: THREE.BufferGeometry, density: nu
   geometry.scale(1 / density, 1 / density, 1 / density).translate(0, (1 / density - 1) / 2, 0);
 }
 
-export function createLodSwap(low: THREE.InstancedMesh, high: THREE.InstancedMesh, originals: readonly THREE.Matrix4[]) {
-  if (originals.length > low.count || originals.length > high.count) throw new RangeError("LOD capacity is too small");
-  const previous = new Uint8Array(originals.length), zero = new THREE.Matrix4().makeScale(0, 0, 0);
+export function createLodSwap(low: THREE.InstancedMesh, high: THREE.InstancedMesh | null, originals: readonly THREE.Matrix4[]) {
+  if (originals.length > low.instanceMatrix.count || (high && originals.length > high.instanceMatrix.count)) throw new RangeError("LOD capacity is too small");
+  const previous = new Uint8Array(originals.length);
   let initial = true;
-  return (selected: readonly boolean[]): void => {
+  return (selected: readonly boolean[], visible?: readonly boolean[]): void => {
     if (selected.length !== originals.length) throw new RangeError("LOD selection must match instances");
-    let anyLow = false, anyHigh = false, dirty = initial;
+    const level = (i: number) => visible && !visible[i] ? 0 : high && selected[i] ? 2 : 1;
+    if (!initial && !selected.some((_, i) => level(i) !== previous[i])) return;
+    let lowCount = 0, highCount = 0;
     for (let i = 0; i < originals.length; i++) {
-      const close = selected[i];
-      anyHigh ||= close; anyLow ||= !close;
-      if (initial || previous[i] !== Number(close)) {
-        low.setMatrixAt(i, close ? zero : originals[i]);
-        high.setMatrixAt(i, close ? originals[i] : zero);
-        previous[i] = Number(close); dirty = true;
-      }
+      const lod = level(i);
+      if (lod === 2) high!.setMatrixAt(highCount++, originals[i]);
+      if (lod === 1) low.setMatrixAt(lowCount++, originals[i]);
+      previous[i] = lod;
     }
-    low.visible = anyLow; high.visible = anyHigh;
-    if (dirty) { low.instanceMatrix.needsUpdate = true; high.instanceMatrix.needsUpdate = true; }
+    low.count = lowCount; low.visible = lowCount > 0; low.instanceMatrix.needsUpdate = true;
+    if (high) {
+      high.count = highCount; high.visible = highCount > 0; high.instanceMatrix.needsUpdate = true;
+    }
     initial = false;
   };
 }

@@ -1,77 +1,92 @@
-import { voxel, type VoxelModel } from "./grid";
 import * as THREE from "three";
-import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
+import { type VoxelModel } from "./grid";
+import { finish } from "./steps";
+import { surfaceLayers, surfaceMesh, type Face } from "./surface";
 
-export function pixelTexture(canvas: HTMLCanvasElement): THREE.CanvasTexture {
-  const texture = new THREE.CanvasTexture(canvas);
+function pixelFilters(texture: THREE.Texture) {
   texture.magFilter = texture.minFilter = THREE.NearestFilter;
   texture.generateMipmaps = false;
   texture.colorSpace = THREE.SRGBColorSpace;
+}
+
+export function pixelTexture(canvas: HTMLCanvasElement): THREE.CanvasTexture {
+  const texture = new THREE.CanvasTexture(canvas);
+  pixelFilters(texture);
   return texture;
 }
 
-/** One atlas and one merged mesh per model, shared by every instance. */
-export function bakeStack(m: VoxelModel, palette: readonly string[], { topTint = 0.18 }: { topTint?: number } = {}): {
-  geometry: THREE.BufferGeometry;
-  material: THREE.MeshBasicMaterial;
-} {
+export function bakeStack(m: VoxelModel, palette: readonly string[], options?: { topTint?: number }) {
+  return finish(bakeLayers(m, palette, options));
+}
+
+/** Paint the stack's bands onto its outer shell, not a full alpha-tested plane per slice. */
+export function* bakeLayers(m: VoxelModel, palette: readonly string[], { topTint = 0.18 }: { topTint?: number } = {}) {
   if (!Number.isFinite(topTint) || topTint < 0 || topTint > 1) throw new RangeError("Top tint must be between zero and one");
-  const columns = Math.ceil(Math.sqrt(m.height));
-  const canvas = document.createElement("canvas");
-  canvas.width = columns * m.width;
-  canvas.height = Math.ceil(m.height / columns) * m.depth;
-  const ctx = canvas.getContext("2d")!;
-  const shade = new THREE.Color();
-  for (let y = 0; y < m.height; y++) {
-    for (let z = 0; z < m.depth; z++) {
-      for (let x = 0; x < m.width; x++) {
-        const index = voxel(m, x, y, z);
-        if (!index) continue;
-        if (!palette[index]) throw new RangeError(`Missing voxel palette index ${index}`);
-        const edge = !voxel(m, x - 1, y, z) || !voxel(m, x + 1, y, z) ||
-          !voxel(m, x, y, z - 1) || !voxel(m, x, y, z + 1);
-        shade.set(palette[index]);
-        shade.multiplyScalar(edge ? (y % 3 === 0 ? 0.30 : 0.46) : 0.72 + 0.36 * y / m.height);
-        if (!edge && !voxel(m, x, y + 1, z)) shade.lerp(new THREE.Color("#98b6c5"), topTint);
-        ctx.fillStyle = `#${shade.getHexString()}`;
-        ctx.fillRect((y % columns) * m.width + x, Math.floor(y / columns) * m.depth + z, 1, 1);
+  const faces: Face[] = [];
+  let area = 0, widest = 1;
+  yield* surfaceLayers(m, false, (f) => {
+    faces.push(f); area += f.w * f.h; widest = Math.max(widest, f.w);
+  });
+
+  // Tallest shelves first; nearest filtering without mipmaps needs no gutters.
+  faces.sort((a, b) => b.h - a.h);
+  const width = Math.max(widest, Math.ceil(Math.sqrt(area)));
+  let x = 0, y = 0, row = 0;
+  function place(f: Face) {
+    if (x + f.w > width) { x = 0; y += row; row = 0; }
+    x += f.w; row = Math.max(row, f.h);
+  }
+  for (const f of faces) place(f);
+  const height = Math.max(1, y + row), pixels = new Uint8Array(4 * width * height);
+  x = y = row = 0;
+  const sky = new THREE.Color("#98b6c5"), shade = new THREE.Color();
+  // A soft key from above/front separates planes without painting dark rings
+  // across faces, fur or glass. Bake the overhang shadows into the same atlas.
+  const light = [0.70, 0.82, 0.58, 1, 0.64, 0.92];
+  const inks = palette.map(color => new THREE.Color(color));
+  // Cache only combinations present on the shell; zero means not painted yet.
+  const colors = new Uint32Array(m.height * inks.length * 12);
+  const mesh = surfaceMesh(m), uv: number[] = [], p = [0, 0, 0];
+  const mw = m.width, mh = m.height, md = m.depth, cells = m.cells;
+  const strideX = 1, strideY = mw * md, strideZ = mw;
+  for (let n = 0; n < faces.length; n++) {
+    if (n % 128 === 0) yield;
+    const f = faces[n], u = (f.d + 1) % 3, v = (f.d + 2) % 3;
+    place(f);
+    const left = x - f.w, side = f.d * 2 + Number(f.sign > 0);
+    const ox = f.d === 0 ? f.sign : 0, oz = f.d === 2 ? f.sign : 0;
+    const checkOverhang = f.d !== 1;
+    for (let j = 0; j < f.h; j++) for (let i = 0; i < f.w; i++) {
+      p[f.d] = f.layer; p[u] = f.i + i; p[v] = f.j + j;
+      const vx = p[0], vy = p[1], vz = p[2];
+      const cellIdx = vy * strideY + vz * strideZ + vx * strideX;
+      const index = cells[cellIdx];
+      if (index >= inks.length) throw new RangeError(`Missing voxel palette index ${index}`);
+      let overhang = 0;
+      if (checkOverhang) {
+        const nx = vx + ox, ny = vy + 1, nz = vz + oz;
+        if (nx >= 0 && nx < mw && ny < mh && nz >= 0 && nz < md) {
+          overhang = cells[ny * strideY + nz * strideZ + nx];
+        }
       }
+      const key = ((vy * inks.length + index) * 6 + side) * 2 + Number(!!overhang);
+      if (!colors[key]) {
+        shade.copy(inks[index]).multiplyScalar(light[side] * (0.88 + 0.18 * vy / m.height));
+        if (side === 3) shade.lerp(sky, topTint * 0.55);
+        else if (vy % 3 === 0) shade.multiplyScalar(0.95);
+        if (overhang) shade.multiplyScalar(0.72);
+        colors[key] = shade.getHex() + 1;
+      }
+      const c = colors[key] - 1;
+      const k = ((y + j) * width + left + i) * 4;
+      pixels[k] = c >> 16; pixels[k + 1] = c >> 8; pixels[k + 2] = c; pixels[k + 3] = 255;
     }
+    mesh.quad(f);
+    uv.push(left / width, y / height, x / width, y / height, x / width, (y + f.h) / height, left / width, (y + f.h) / height);
   }
-  const parts: THREE.BufferGeometry[] = [];
-  for (let y = 0; y < m.height; y++) {
-    const plane = new THREE.PlaneGeometry(m.width, m.depth);
-    plane.rotateX(-Math.PI / 2);
-    plane.translate(0, y + 0.5, 0);
-    const uv = plane.attributes.uv;
-    for (let i = 0; i < uv.count; i++) {
-      uv.setXY(i, ((y % columns) * m.width + uv.getX(i) * m.width) / canvas.width,
-        1 - (Math.floor(y / columns) * m.depth + (1 - uv.getY(i)) * m.depth) / canvas.height);
-    }
-    parts.push(plane);
-  }
-  // Side faces keep tiny stacks solid while the camera orbits.
-  const positions: number[] = [];
-  const uvs: number[] = [];
-  const directions = [[1, 0], [-1, 0], [0, 1], [0, -1]];
-  for (let y = 0; y < m.height; y++) for (let z = 0; z < m.depth; z++) for (let x = 0; x < m.width; x++) {
-    if (!voxel(m, x, y, z)) continue;
-    for (const [dx, dz] of directions) {
-      if (voxel(m, x + dx, y, z + dz)) continue;
-      const cx = x - m.width / 2 + 0.5 + dx * 0.5;
-      const cz = z - m.depth / 2 + 0.5 + dz * 0.5;
-      const points = [[cx - dz * 0.5, y - 0.5, cz + dx * 0.5], [cx + dz * 0.5, y - 0.5, cz - dx * 0.5],
-        [cx + dz * 0.5, y + 0.5, cz - dx * 0.5], [cx - dz * 0.5, y + 0.5, cz + dx * 0.5]];
-      const u = ((y % columns) * m.width + x + 0.5) / canvas.width;
-      const v = 1 - (Math.floor(y / columns) * m.depth + z + 0.5) / canvas.height;
-      for (const i of [0, 1, 2, 0, 2, 3]) { positions.push(...points[i]); uvs.push(u, v); }
-    }
-  }
-  const walls = new THREE.BufferGeometry();
-  walls.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-  walls.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
-  const surfaces = parts.map((p) => { const g = p.toNonIndexed(); g.deleteAttribute("normal"); return g; });
-  const geometry = mergeGeometries([...surfaces, walls]);
-  for (const p of [...parts, ...surfaces, walls]) p.dispose();
-  return { geometry, material: new THREE.MeshBasicMaterial({ map: pixelTexture(canvas), alphaTest: 0.5, side: THREE.DoubleSide }) };
+  const texture = new THREE.DataTexture(pixels, width, height);
+  pixelFilters(texture); texture.needsUpdate = true;
+  const geometry = mesh.finish();
+  geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2));
+  return { geometry, material: new THREE.MeshBasicMaterial({ map: texture }) };
 }

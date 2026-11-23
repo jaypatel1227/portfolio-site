@@ -36,66 +36,66 @@ void describe("voxel models", () => {
   });
 });
 
-void describe("slice baking", () => {
-  function withCanvas(run) {
-    const previous = globalThis.document;
-    const pixels = new Map();
-    const context = { fillStyle: "", fillRect(x, y) { pixels.set(`${x},${y}`, this.fillStyle); } };
-    const canvas = { width: 0, height: 0, getContext: () => context };
-    globalThis.document = { createElement: () => canvas };
-    try { run(canvas, pixels); } finally { globalThis.document = previous; }
+void describe("surface atlas baking", () => {
+  function sample(mesh, origin, normal) {
+    const dir = new THREE.Vector3(...normal);
+    const ray = new THREE.Raycaster(new THREE.Vector3(...origin).addScaledVector(dir, 0.55), dir.negate(), 0, 0.1);
+    const hit = ray.intersectObject(mesh, false)[0];
+    assert.ok(hit, `Missing exterior at ${origin} facing ${normal}`);
+    const { width, height, data } = mesh.material.map.image;
+    const i = (Math.floor(hit.uv.y * height) * width + Math.floor(hit.uv.x * width)) * 4;
+    assert.equal(data[i + 3], 255);
+    return data[i] * 65536 + data[i + 1] * 256 + data[i + 2];
   }
+  void it("uses six opaque outward quads even for a multicolor 12-layer block", () => {
+    const m = model(3, 12, 5); fill(m, (x, y, z) => 1 + (x + y + z + 3) % 4);
+    const { geometry, material } = bakeStack(m, PALETTE);
+    assert.equal(geometry.index.count, 36);
+    assert.equal(geometry.attributes.position.count, 24);
+    assert.equal(material.alphaTest, 0);
+    assert.equal(material.side, THREE.FrontSide);
+    assert.ok([...geometry.attributes.uv.array].every((v) => v >= 0 && v <= 1));
+    const sprite = pixelTexture({});
+    for (const texture of [material.map, sprite]) {
+      assert.equal(texture.minFilter, THREE.NearestFilter); assert.equal(texture.magFilter, THREE.NearestFilter);
+      assert.equal(texture.generateMipmaps, false); assert.equal(texture.colorSpace, THREE.SRGBColorSpace);
+    }
+  });
 
-  void it("keeps texture pixels crisp", () => withCanvas((canvas) => {
-    const t = pixelTexture(canvas);
-    assert.equal(t.minFilter, THREE.NearestFilter);
-    assert.equal(t.magFilter, THREE.NearestFilter);
-    assert.equal(t.generateMipmaps, false);
-    t.dispose();
-  }));
+  void it("preserves every exposed cell's color and winding across atlas shelves, holes and orientations", () => {
+    const m = model(5, 4, 7);
+    fill(m, (x, y, z) => x === 1 && z > -2 && y !== 1 || y === 3 && z === -2 ? 0 : 1 + (2*x + 3*y + z + 12) % 13);
+    const { geometry, material } = bakeStack(m, PALETTE), mesh = new THREE.Mesh(geometry, material);
+    const sky = new THREE.Color("#98b6c5");
+    for (let y = 0; y < m.height; y++) for (let z = 0; z < m.depth; z++) for (let x = 0; x < m.width; x++) {
+      const c = voxel(m, x, y, z); if (!c) continue;
+      for (const [normal, light] of [[[1,0,0],0.82],[[-1,0,0],0.70],[[0,1,0],1],[[0,-1,0],0.58],[[0,0,1],0.92],[[0,0,-1],0.64]]) {
+        const [dx, dy, dz] = normal;
+        if (voxel(m, x + dx, y + dy, z + dz)) continue;
+        const ink = new THREE.Color(PALETTE[c]).multiplyScalar(light * (0.88 + 0.18 * y / m.height));
+        if (dy === 1) ink.lerp(sky, 0.18 * 0.55);
+        else if (y % 3 === 0) ink.multiplyScalar(0.95);
+        if (dy === 0 && voxel(m, x + dx, y + 1, z + dz)) ink.multiplyScalar(0.72);
+        assert.equal(sample(mesh, [x - 2, y, z - 3], normal), ink.getHex());
+      }
+    }
+  });
 
-  void it("bakes one quad per layer plus closed voxel side walls", () => withCanvas(() => {
-    const m = model(1, 2, 1);
-    fill(m, () => 1);
-    const baked = bakeStack(m, ["#000000", "#99aaaa"]);
-    assert.equal(baked.geometry.attributes.position.count, 2 * 6 + 2 * 4 * 6);
-    assert.equal(baked.material.alphaTest, 0.5);
-    assert.ok([...baked.geometry.attributes.uv.array].every((v) => v >= 0 && v <= 1));
-    baked.geometry.dispose(); baked.material.map.dispose(); baked.material.dispose();
-  }));
+  void it("preserves untinted top hair when requested", () => {
+    const m = character(), { geometry, material } = bakeStack(m, CHARACTER_PALETTE, { topTint: 0 });
+    const mesh = new THREE.Mesh(geometry, material);
+    for (let x = 4; x < 12; x++) for (let z = 0; z < 8; z++) {
+      const ink = new THREE.Color(sample(mesh, [x - 7.5,31,z - 3.5], [0,1,0]));
+      assert.ok(ink.r > ink.g && ink.g > ink.b);
+    }
+  });
 
-  void it("bakes empty art without introducing opaque walls", () => withCanvas(() => {
-    const baked = bakeStack(model(2, 3, 2), ["#000000"]);
-    assert.equal(baked.geometry.attributes.position.count, 3 * 6);
-    baked.geometry.dispose(); baked.material.map.dispose(); baked.material.dispose();
-  }));
-
-  void it("rejects an unknown palette index", () => withCanvas(() => {
-    const m = model(1, 1, 1);
+  void it("handles empty geometry and rejects invalid colors and tint", () => {
+    const m = model(1, 1, 1), baked = bakeStack(m, PALETTE);
+    assert.equal(baked.geometry.index.count, 0);
+    assert.equal(baked.material.map.image.width, 1);
+    for (const topTint of [-1, 2, NaN, Infinity]) assert.throws(() => bakeStack(m, PALETTE, { topTint }), /Top tint/);
     fill(m, () => 2);
     assert.throws(() => bakeStack(m, ["#000000", "#ffffff"]), /Missing voxel palette index 2/);
-  }));
-
-  void it("preserves default sky tint but keeps every character top-hair texel brown when disabled", () => withCanvas((_canvas, pixels) => {
-    const m = character();
-    const tinted = bakeStack(m, CHARACTER_PALETTE);
-    const defaultTop = pixels.get("24,44");
-    const untinted = bakeStack(m, CHARACTER_PALETTE, { topTint: 0 });
-    assert.notEqual(pixels.get("24,44"), defaultTop);
-    for (let x = 4; x < 12; x++) for (let z = 0; z < 8; z++) {
-      const color = new THREE.Color(pixels.get(`${16 + x},${40 + z}`));
-      assert.ok(color.r > color.g && color.g > color.b);
-    }
-    const expected = new THREE.Color(CHARACTER_PALETTE[26]).multiplyScalar(0.72 + 0.36 * 31 / 32);
-    assert.equal(pixels.get("24,44"), `#${expected.getHexString()}`);
-    assert.equal(defaultTop, `#${expected.lerp(new THREE.Color("#98b6c5"), 0.18).getHexString()}`);
-    for (const b of [tinted, untinted]) { b.geometry.dispose(); b.material.map.dispose(); b.material.dispose(); }
-  }));
-
-  void it("allows untinted empty art and rejects invalid top tint", () => withCanvas(() => {
-    const m = model(1, 1, 1), baked = bakeStack(m, PALETTE, { topTint: 0 });
-    assert.equal(baked.geometry.attributes.position.count, 6);
-    for (const topTint of [-1, 2, NaN, Infinity]) assert.throws(() => bakeStack(m, PALETTE, { topTint }), /Top tint/);
-    baked.geometry.dispose(); baked.material.map.dispose(); baked.material.dispose();
-  }));
+  });
 });

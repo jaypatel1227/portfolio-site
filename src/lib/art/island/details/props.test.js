@@ -12,7 +12,7 @@ void it("bakes every close-view prop with its original colors, independently of 
     const mesh = new THREE.InstancedMesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial(), points.length);
     meshes.push(mesh); return mesh;
   }, sky);
-  assert.equal(meshes.length, 17);
+  assert.equal(meshes.length, 14);
   for (const index of [24, 25, 26, 27]) assert.ok(used.has(index));
   for (const mesh of meshes) { mesh.geometry.dispose(); mesh.material.dispose(); }
   for (const mesh of sky.children) { mesh.geometry.dispose(); mesh.material.dispose(); }
