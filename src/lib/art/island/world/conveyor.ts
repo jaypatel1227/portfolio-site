@@ -17,21 +17,20 @@ export function addConveyor(scene: THREE.Scene) {
     const a = TRACK.length * i / segments, b = TRACK.length * (i + 1) / segments;
     for (const edge of [-w, w]) {
       const inset = edge * 0.78, lip = h + 0.023;
-      quad(vertex(a, edge, 0.01), vertex(b, edge, 0.01), vertex(b, edge, lip), vertex(a, edge, lip), i % 4 ? "#393b3d" : "#64584a");
+      quad(vertex(a, edge, 0.01), vertex(b, edge, 0.01), vertex(b, edge, lip), vertex(a, edge, lip), i % 4 ? "#36393d" : "#706244");
       quad(vertex(a, edge, lip), vertex(b, edge, lip), vertex(b, inset, lip), vertex(a, inset, lip),
-        i % 4 === 0 ? "#a49a70" : i % 4 === 3 ? "#494f4d" : "#728077");
-      quad(vertex(a, inset, lip), vertex(b, inset, lip), vertex(b, inset, h), vertex(a, inset, h), "#383a3f");
+        i % 4 === 0 ? "#d9b44a" : i % 4 === 3 ? "#454a4d" : "#6c7576");
+      quad(vertex(a, inset, lip), vertex(b, inset, lip), vertex(b, inset, h), vertex(a, inset, h), "#35383e");
     }
     quad(vertex(a, -w * 0.78, h), vertex(b, -w * 0.78, h), vertex(b, w * 0.78, h), vertex(a, w * 0.78, h),
-      i % 2 ? "#434746" : "#595a52");
+      i % 2 ? "#3e4244" : "#525450");
   }
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
   geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
   scene.add(new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide })));
 
-  // Shared articulated tread: raised shoulders catch light, with an inset
-  // direction mark on every sixth link. All links travel with the rider.
+  // Shared articulated tread: ribbed iron links with golden directional chevrons.
   const marker = new THREE.BufferGeometry(), outline: number[] = [], tones: number[] = [];
   function ribbon(start: number, end: number, span: number, y: number, ink: string) {
     shade.set(ink);
@@ -42,13 +41,13 @@ export function addConveyor(scene: THREE.Scene) {
       }
     }
   }
-  ribbon(-0.035, 0.13, w * 0.71, 0, "#565452");
-  ribbon(0.078, 0.12, w * 0.67, 0.004, "#837d70");
-  ribbon(-0.005, 0.086, w * 0.31, 0.008, "#c8c2ae");
+  ribbon(-0.035, 0.13, w * 0.71, 0, "#4e4d4c");
+  ribbon(0.078, 0.12, w * 0.67, 0.004, "#7a766d");
+  ribbon(-0.005, 0.092, w * 0.36, 0.008, "#e6d8a8");
   marker.setAttribute("position", new THREE.Float32BufferAttribute(outline, 3));
   marker.setAttribute("color", new THREE.Float32BufferAttribute(tones, 3));
   const marks = new THREE.InstancedMesh(marker, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide }), 36);
-  for (let i = 0; i < marks.count; i++) marks.setColorAt(i, shade.set(i % 6 ? "#a49f96" : "#83c45d"));
+  for (let i = 0; i < marks.count; i++) marks.setColorAt(i, shade.set(i % 4 ? "#9a968e" : "#f0c23c"));
   marks.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(marks);
   const pose = new THREE.Object3D();
   function paint(s: number) {

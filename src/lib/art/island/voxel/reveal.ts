@@ -19,17 +19,37 @@ export function createReveal(meshes: THREE.InstancedMesh[], cullPadding?: number
     return { mesh, originals, bounds, visible: new Uint8Array(mesh.count).fill(1) };
   });
   const matrix = new THREE.Matrix4(), scale = new THREE.Vector3();
+  const lastPlanes = new Float64Array(24);
+  let hasLastFrustum = false;
   let amount = 0;
+  function frustumChanged(frustum?: THREE.Frustum): boolean {
+    if (!frustum) {
+      const changed = hasLastFrustum;
+      hasLastFrustum = false;
+      return changed;
+    }
+    let changed = !hasLastFrustum;
+    for (let i = 0; i < 6; i++) {
+      const p = frustum.planes[i], o = i * 4;
+      if (lastPlanes[o] !== p.normal.x || lastPlanes[o + 1] !== p.normal.y || lastPlanes[o + 2] !== p.normal.z || lastPlanes[o + 3] !== p.constant) {
+        lastPlanes[o] = p.normal.x; lastPlanes[o + 1] = p.normal.y; lastPlanes[o + 2] = p.normal.z; lastPlanes[o + 3] = p.constant;
+        changed = true;
+      }
+    }
+    hasLastFrustum = true;
+    return changed;
+  }
   return {
     get amount() { return amount; },
     update(target: number, dt: number, moving?: THREE.InstancedMesh, frustum?: THREE.Frustum): number {
       const before = amount;
       amount = approachReveal(amount, target, dt, DETAIL.revealSeconds);
+      const checkFrustum = frustumChanged(frustum) || (before === 0 && amount > 0);
       let index = 0;
       for (const { mesh, originals, bounds, visible } of entries) {
         if (amount === 0) { mesh.visible = false; index += originals.length; continue; }
         let dirty = amount !== before || mesh === moving;
-        if (bounds && mesh !== moving) for (let i = 0; i < bounds.length; i++) {
+        if (bounds && mesh !== moving && checkFrustum) for (let i = 0; i < bounds.length; i++) {
           const draw = Number(!frustum || frustum.intersectsSphere(bounds[i]));
           if (visible[i] !== draw) { visible[i] = draw; dirty = true; }
         }

@@ -92,14 +92,20 @@ export function createDetails(seed: number, batch: Batch, scene: THREE.Scene, sk
         if ("requestIdleCallback" in window) window.requestIdleCallback(build, { timeout: 32 });
         else setTimeout(build, 0);
       }
-      for (const entry of entries) {
-        entry.originals.forEach((matrix, i) => {
-          entry.nearby[i] = !!entry.high && (entry.kind === "ground" || lodNearby(distance(matrix), radius(entry), entry.nearby[i], DETAIL.distanceBand));
-          entry.selected[i] = zoomed && entry.nearby[i];
+      for (let e = 0; e < entries.length; e++) {
+        const entry = entries[e];
+        const originals = entry.originals;
+        const hasHigh = !!entry.high;
+        const r = hasHigh ? radius(entry) : 0;
+        const isGround = entry.kind === "ground";
+        for (let i = 0; i < originals.length; i++) {
+          const near = hasHigh && (isGround || lodNearby(distance(originals[i]), r, entry.nearby[i], DETAIL.distanceBand));
+          entry.nearby[i] = near;
+          entry.selected[i] = zoomed && near;
           entry.visible[i] = !zoomed || frustum.intersectsBox(entry.bounds[i]);
-        });
+        }
         entry.swap!(entry.selected, entry.visible);
-        entry.high?.position.copy(entry.mesh.position);
+        if (entry.high) entry.high.position.copy(entry.mesh.position);
       }
       scenery?.update(amount, time, dt, frustum);
       collection.update(amount, player, dt, time);

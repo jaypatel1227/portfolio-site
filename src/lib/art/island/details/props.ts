@@ -100,7 +100,11 @@ export function createSmallProps(seed: number, batch: Batch, sky: THREE.Group) {
     get amount() { return reveal.amount; },
     update(time: number, player: Point, amount: number, camera: THREE.OrthographicCamera, dt: number) {
       const progress = reveal.update(amount, dt);
-      constellation.visible = progress > 0;
+      if (progress === 0) {
+        constellation.visible = false;
+        return;
+      }
+      constellation.visible = true;
       constellation.material.opacity = progress;
       constellation.position.set(camera.left + (camera.right - camera.left) * 0.18, camera.top - (camera.top - camera.bottom) * 0.2, -148);
       constellation.scale.setScalar((camera.top - camera.bottom) * 0.025);

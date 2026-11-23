@@ -14,13 +14,18 @@ export function* surfaceLayers(m: VoxelModel, byColor: boolean, emit: (face: Fac
     for (const sign of [-1, 1]) for (let layer = 0; layer < dims[d]; layer++) {
       yield;
       const edge = layer + sign < 0 || layer + sign >= dims[d], step = sign * stride[d];
+      let hasAny = false;
       for (let j = 0; j < h; j++) {
         let n = layer * stride[d] + j * stride[v];
+        const row = j * w;
         for (let i = 0; i < w; i++, n += stride[u]) {
           const c = m.cells[n];
-          mask[j * w + i] = c && (edge || !m.cells[n + step]) ? byColor ? c : 1 : 0;
+          const v_ = c && (edge || !m.cells[n + step]) ? byColor ? c : 1 : 0;
+          mask[row + i] = v_;
+          if (v_) hasAny = true;
         }
       }
+      if (!hasAny) continue;
       for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
         const ink = mask[j * w + i];
         if (!ink) continue;

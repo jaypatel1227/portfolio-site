@@ -3,7 +3,7 @@ import { sculpture, type XYZ } from "./sculpt";
 /** A pocket orrery: all bodies, moons, armatures and cutaways are solid voxels. */
 export function orrery() {
   const s = sculpture(99, 34, 75);
-  const brass = "#a38150", shadow = "#403845", rim = "#d3af72";
+  const brass = "#a6824e", shadow = "#3c3543", rim = "#dab675";
   s.orb([0, 1, 0], [14, 2, 12], shadow);
   s.orb([0, 3, 0], [12, 2, 10], (x, _y, z) => Math.hypot(x, z * 1.2) > 8 && Math.cos(Math.atan2(z, x) * 12) > 0.4 ? rim : brass);
   s.orb([0, 5, 0], [7, 1, 6], "#665047");
@@ -17,41 +17,50 @@ export function orrery() {
   function body(at: XYZ, r: number, ink: (x: number, y: number, z: number) => string | null) {
     pin(at[0], at[1], at[2]); s.orb(at, [r, r, r], ink);
   }
+  // Sun: fiery convective granulation.
   body([0, 18, 0], 10, (x, y, z) => {
-    const plume = Math.sin(x * 0.42 + Math.sin(y * 0.4 + z * 0.2) * 2.5) + Math.cos(z * 0.5 - y * 0.27);
-    return plume > 1.25 ? "#ffdd82" : plume < -0.9 || y < -6 ? "#e4763e" : "#f6a348";
+    const plume = Math.sin(x * 0.44 + Math.sin(y * 0.42 + z * 0.22) * 2.5) + Math.cos(z * 0.52 - y * 0.28);
+    return plume > 1.2 ? "#fff09c" : plume > 0.35 ? "#ffbc4e" : plume < -0.85 || y < -6 ? "#de6432" : "#f58e3d";
   });
-  // Hourglass Twins: a stream joins the striped sandstone and ash-shell cores.
-  s.rod([-17, 15, 16], [-32, 12, 25], 1, "#f6ca84");
-  body([-17, 15, 16], 4, (x, y, z) => Math.abs(z - x) < 2 && y > -2 ? "#874638" : y === 0 || y === -2 ? "#bd6a43" : "#e49b5f");
-  body([-32, 12, 25], 4, (x, y, z) => Math.abs(x + z) < 2 || x > 1 && y === 2 ? "#c39666" : y > 0 ? "#756957" : "#49484b");
-  // Timber Hearth's seas, polar forests, pale crater moon.
-  body([17, 13, 23], 6, (x, y, z) => Math.sin(x * 0.8 + z * 0.5) + Math.cos(y * 0.6) > 0.5 ? "#5c91a0" : y > 2 ? "#537457" : "#81814f");
-  s.orb([24, 18, 27], [2, 2, 2], (x, y) => x === 0 && y === 1 ? "#808476" : "#c1c2b0");
-  // Brittle Hollow's broken crust exposes a black-hole core and its blue rim.
+  // Hourglass Twins: bright golden sand stream linking canyon-banded Ember Twin and solar-tower Ash Twin.
+  s.rod([-17, 15, 16], [-32, 12, 25], 1, "#fbd48c");
+  s.rod([-18, 15, 17], [-31, 12, 24], 0, "#ffe8ad");
+  body([-17, 15, 16], 4, (x, y, z) => Math.abs(z - x) < 2 && y > -2 ? "#8c3d32" : y === 0 || y === -2 ? "#c7643e" : "#ec9b5b");
+  body([-32, 12, 25], 4, (x, y, z) =>
+    Math.abs(y) <= 1 && Math.abs(x + z) % 3 === 0 ? "#e2c278" :
+      Math.abs(y) <= 1 ? "#454b58" : y > 1 ? "#c99b68" : "#6c6052");
+  // Timber Hearth's pine forests, teal seas, and cratered pale Attlerock moon.
+  body([17, 13, 23], 6, (x, y, z) => Math.sin(x * 0.8 + z * 0.5) + Math.cos(y * 0.6) > 0.45 ? "#4a8da3" : y > 1 ? "#487454" : "#7a824a");
+  s.orb([24, 18, 27], [2, 2, 2], (x, y) => (x === 0 && y === 1) || (x === -1 && y === 0) ? "#7d8276" : "#cbccc0");
+  // Brittle Hollow: fractured indigo crust revealing deep black-hole singularity & bright blue-violet rim.
   pin(-29, 16, -9);
-  s.orb([-29, 16, -9], [4, 4, 4], (x, y) => Math.abs(x + y) < 2 ? "#6889d2" : "#1f2039");
-  s.orb([-29, 16, -9], [7, 7, 7], (x, y, z) => {
-    if (x * x + y * y + z * z < 22 || z > -1 && Math.abs(x - y * 0.55) < 2 || y > 0 && Math.abs(z + x * 0.6) < 2) return null;
-    return y > 2 ? "#9185a8" : x < 0 ? "#645b86" : "#514966";
+  s.orb([-29, 16, -9], [4, 4, 4], (x, y, z) => {
+    const r = Math.hypot(x, y, z);
+    return r < 2.7 ? "#121326" : Math.abs(x + y) < 2.2 ? "#89a8ff" : "#4b5ca8";
   });
-  s.orb([-35, 23, -13], [3, 3, 3], (x, y) => Math.abs(x - y) < 2 ? "#ee864f" : "#5b4650");
+  s.orb([-29, 16, -9], [7, 7, 7], (x, y, z) => {
+    if (x * x + y * y + z * z < 23 || z > -1 && Math.abs(x - y * 0.55) < 2.2 || y > 0 && Math.abs(z + x * 0.6) < 2.2) return null;
+    return y > 2 ? "#9a8bb6" : x < 0 ? "#665c8c" : "#4f4668";
+  });
+  // Hollow's Lantern: volcanic dark rock veined with bright magma.
+  s.orb([-35, 23, -13], [3, 3, 3], (x, y) => Math.abs(x - y) < 1.8 ? "#ff9248" : Math.abs(x + y) === 2 ? "#d65238" : "#4c3b46");
+  // Giant's Deep: swirling turquoise-emerald cloud bands and bright cyclone spiral.
   body([15, 18, -24], 9, (x, y, z) => {
     const eye = Math.hypot(x + 2, (z - 2) * 0.83);
-    if (y > 5 && eye < 4.5) return eye < 1.7 ? "#375d58" : eye < 3 ? "#b3c695" : "#8eaf83";
-    const bands = Math.sin(y * 1.1 + Math.sin(x * 0.49 + z * 0.14) + z * 0.21);
-    return bands > 0.6 ? "#93b589" : bands < -0.45 ? "#37665c" : "#62917a";
+    if (y > 5 && eye < 4.8) return eye < 1.6 ? "#275452" : eye < 3.1 ? "#9ee0c4" : "#6ec2a4";
+    const swirl = Math.sin(y * 1.15 + Math.sin(x * 0.52 + z * 0.16) * 1.2 + z * 0.22);
+    return swirl > 0.55 ? "#8ed1b3" : swirl < -0.45 ? "#2d6864" : "#4d9c8c";
   });
   for (let i = 0; i < 48; i++) {
-    const a = i / 7, r = 0.5 + i / 12;
-    s.dot(15 + Math.cos(a) * r, 26, -24 + Math.sin(a) * r, "#c0cf9e");
+    const a = i / 6.5, r = 0.6 + i / 11.5;
+    s.dot(15 + Math.cos(a) * r, 26, -24 + Math.sin(a) * r, "#b6ebd0");
   }
-  // Thorny ice shards framing a red seed on Dark Bramble.
-  body([39, 14, 2], 6, (x, y, z) => Math.abs(y - x * 0.65) < 2 || Math.abs(x - z) < 2 ? "#4c5158" : "#b9c8bd");
-  for (const [x, y, z] of [[-6, 7, 3], [5, 8, -4], [8, -1, 6], [-7, -4, -4]]) {
-    s.rod([39, 14, 2], [39 + x, 14 + y, 2 + z], 1, "#4c4a4a");
-    s.rod([39 + x, 14 + y, 2 + z], [39 + x - 2, 17 + y, 2 + z], 0, "#847c72");
+  // Dark Bramble: fractured pale-ice shell, gnarled dark thorny vines, glowing angler-red core.
+  body([39, 14, 2], 6, (x, y, z) => Math.abs(y - x * 0.65) < 2 || Math.abs(x - z) < 2 ? "#3d424a" : "#cce0dc");
+  for (const [x, y, z] of [[-7, 7, 3], [6, 8, -4], [8, -1, 6], [-7, -4, -4], [2, 8, 5]]) {
+    s.rod([39, 14, 2], [39 + x, 14 + y, 2 + z], 1, "#443d3e");
+    s.rod([39 + x, 14 + y, 2 + z], [39 + x - 2, 17 + y, 2 + z], 0, "#7c7268");
   }
-  s.orb([39, 15, 7], [2, 2, 1], "#e66c61");
+  s.orb([39, 15, 7], [2, 2, 1], (x, y) => x === 0 && y === 0 ? "#ffb48a" : "#eb5a50");
   return s;
 }

@@ -58,6 +58,7 @@ export function createScenery(seed: number, batch: Batch, obstacles: Obstacle[])
   return {
     get amount() { return reveal.amount; },
     update(amount: number, time: number, dt: number, frustum?: THREE.Frustum): void {
+      if (amount === 0 && reveal.amount === 0) return;
       for (let i = 0; i < bugs.count; i++) {
         const o = flowers[i];
         matrix.compose(position.set(o.x + Math.sin(time * 0.3 + i) * 0.3, 0.03, o.z + Math.cos(time * 0.4 + i) * 0.3), rotation.setFromAxisAngle(THREE.Object3D.DEFAULT_UP, time * 0.3 + i), scale);

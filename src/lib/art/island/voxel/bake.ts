@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { voxel, type VoxelModel } from "./grid";
+import { type VoxelModel } from "./grid";
 import { finish } from "./steps";
 import { surfaceLayers, surfaceMesh, type Face } from "./surface";
 
@@ -47,16 +47,28 @@ export function* bakeLayers(m: VoxelModel, palette: readonly string[], { topTint
   // Cache only combinations present on the shell; zero means not painted yet.
   const colors = new Uint32Array(m.height * inks.length * 12);
   const mesh = surfaceMesh(m), uv: number[] = [], p = [0, 0, 0];
+  const mw = m.width, mh = m.height, md = m.depth, cells = m.cells;
+  const strideX = 1, strideY = mw * md, strideZ = mw;
   for (let n = 0; n < faces.length; n++) {
     if (n % 128 === 0) yield;
     const f = faces[n], u = (f.d + 1) % 3, v = (f.d + 2) % 3;
     place(f);
     const left = x - f.w, side = f.d * 2 + Number(f.sign > 0);
+    const ox = f.d === 0 ? f.sign : 0, oz = f.d === 2 ? f.sign : 0;
+    const checkOverhang = f.d !== 1;
     for (let j = 0; j < f.h; j++) for (let i = 0; i < f.w; i++) {
       p[f.d] = f.layer; p[u] = f.i + i; p[v] = f.j + j;
-      const [vx, vy, vz] = p, index = voxel(m, vx, vy, vz);
+      const vx = p[0], vy = p[1], vz = p[2];
+      const cellIdx = vy * strideY + vz * strideZ + vx * strideX;
+      const index = cells[cellIdx];
       if (index >= inks.length) throw new RangeError(`Missing voxel palette index ${index}`);
-      const overhang = f.d !== 1 && voxel(m, vx + (f.d === 0 ? f.sign : 0), vy + 1, vz + (f.d === 2 ? f.sign : 0));
+      let overhang = 0;
+      if (checkOverhang) {
+        const nx = vx + ox, ny = vy + 1, nz = vz + oz;
+        if (nx >= 0 && nx < mw && ny < mh && nz >= 0 && nz < md) {
+          overhang = cells[ny * strideY + nz * strideZ + nx];
+        }
+      }
       const key = ((vy * inks.length + index) * 6 + side) * 2 + Number(!!overhang);
       if (!colors[key]) {
         shade.copy(inks[index]).multiplyScalar(light[side] * (0.88 + 0.18 * vy / m.height));
