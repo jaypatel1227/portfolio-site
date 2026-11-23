@@ -69,12 +69,14 @@ void describe("surface atlas baking", () => {
     const sky = new THREE.Color("#98b6c5");
     for (let y = 0; y < m.height; y++) for (let z = 0; z < m.depth; z++) for (let x = 0; x < m.width; x++) {
       const c = voxel(m, x, y, z); if (!c) continue;
-      const edge = [[-1,0],[1,0],[0,-1],[0,1]].some(([dx,dz]) => !voxel(m,x+dx,y,z+dz));
-      const ink = new THREE.Color(PALETTE[c]).multiplyScalar(edge ? y % 3 === 0 ? 0.30 : 0.46 : 0.72 + 0.36 * y / m.height);
-      if (!edge && !voxel(m, x, y+1, z)) ink.lerp(sky, 0.18);
-      for (const normal of [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]]) {
-        if (!voxel(m, x+normal[0], y+normal[1], z+normal[2]))
-          assert.equal(sample(mesh, [x-2,y,z-3], normal), ink.getHex());
+      for (const [normal, light] of [[[1,0,0],0.82],[[-1,0,0],0.70],[[0,1,0],1],[[0,-1,0],0.58],[[0,0,1],0.92],[[0,0,-1],0.64]]) {
+        const [dx, dy, dz] = normal;
+        if (voxel(m, x + dx, y + dy, z + dz)) continue;
+        const ink = new THREE.Color(PALETTE[c]).multiplyScalar(light * (0.88 + 0.18 * y / m.height));
+        if (dy === 1) ink.lerp(sky, 0.18 * 0.55);
+        else if (y % 3 === 0) ink.multiplyScalar(0.95);
+        if (dy === 0 && voxel(m, x + dx, y + 1, z + dz)) ink.multiplyScalar(0.72);
+        assert.equal(sample(mesh, [x - 2, y, z - 3], normal), ink.getHex());
       }
     }
   });

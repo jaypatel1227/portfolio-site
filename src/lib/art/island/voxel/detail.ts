@@ -25,9 +25,9 @@ export function* detailLayers(base: VoxelModel, seed: number, kind: DetailKind) 
       if (pz > 2 && hollow < 1) index = pz > 3 ? 0 : 2;
       if (py < 7 && noise < 13) index = 10;
     } else if (kind === "cabin") {
-      if (index === 3 || index === 4) index = y % 8 === 0 || (Math.floor(y / 8) % 2 ? x : x + 13) % 39 === 0 ? 2 : noise < 8 ? 4 : 3;
-      if (index === 13 || index === 14) index = (x + Math.floor(y / 4) * 3) % 12 === 0 || y % 5 === 0 ? 13 : 14;
-      if (px > 7 && px < 11 && pz < -2 && py > 22) index = y % 4 === 0 || (x + Math.floor(y / 4) * 3) % 8 === 0 ? 13 : 4;
+      if (index === 3 && py < 18 && y % 8 === 0 && Math.abs(px) < 11) index = 2;
+      if (index === 13 && py >= 18 && (z + Math.floor(y / 6) * 7) % 17 === 0 && y % 6 > 0) index = 12;
+      if (px >= 6 && px <= 12 && pz >= -8 && pz <= -2 && py >= 24 && py < 32) index = y % 6 === 0 || (x + z + Math.floor(y / 6) * 4) % 12 === 0 ? 13 : 4;
       if (index === 17 && noise < 22) index = 18;
     } else if (kind === "rock") {
       const lichen = Math.sin(px * 0.53 + pz * 0.3) + Math.cos(pz * 0.88 - py * 0.35);
@@ -37,8 +37,8 @@ export function* detailLayers(base: VoxelModel, seed: number, kind: DetailKind) 
     } else if (kind === "ground" && oy === base.height - 1) {
       if (index === 11 || index === 12) { if (noise < 4) index = 13; }
       else if (noise < 6) index = 10;
-    } else if (kind === "pond") {
-      index = Math.sin(px * 1.9 + pz * 2.1) > 0.93 ? 23 : noise < 10 ? 6 : 22;
+    } else if (kind === "pond" && index === 22) {
+      if (Math.sin(pz * 1.8 + Math.cos(px * 0.45) * 0.8) > 0.94 && Math.cos(px * 0.7 + pz) > 0.4) index = 23;
     }
     m.cells[(y * m.depth + z) * m.width + x] = index;
   }

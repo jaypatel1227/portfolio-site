@@ -16,27 +16,39 @@ export function addConveyor(scene: THREE.Scene) {
   for (let i = 0; i < segments; i++) {
     const a = TRACK.length * i / segments, b = TRACK.length * (i + 1) / segments;
     for (const edge of [-w, w]) {
-      const inset = edge * 0.78;
-      quad(vertex(a, edge, 0.01), vertex(b, edge, 0.01), vertex(b, edge, h), vertex(a, edge, h), "#374746");
-      quad(vertex(a, edge, h), vertex(b, edge, h), vertex(b, inset, h), vertex(a, inset, h),
-        i % 4 === 0 ? "#9ba58a" : i % 4 === 3 ? "#385c50" : "#61916c");
+      const inset = edge * 0.78, lip = h + 0.023;
+      quad(vertex(a, edge, 0.01), vertex(b, edge, 0.01), vertex(b, edge, lip), vertex(a, edge, lip), i % 4 ? "#393b3d" : "#64584a");
+      quad(vertex(a, edge, lip), vertex(b, edge, lip), vertex(b, inset, lip), vertex(a, inset, lip),
+        i % 4 === 0 ? "#a49a70" : i % 4 === 3 ? "#494f4d" : "#728077");
+      quad(vertex(a, inset, lip), vertex(b, inset, lip), vertex(b, inset, h), vertex(a, inset, h), "#383a3f");
     }
     quad(vertex(a, -w * 0.78, h), vertex(b, -w * 0.78, h), vertex(b, w * 0.78, h), vertex(a, w * 0.78, h),
-      i % 2 ? "#444b4c" : "#555d59");
+      i % 2 ? "#434746" : "#595a52");
   }
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
   geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
   scene.add(new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide })));
 
-  // Paired green turbo chevrons travel at the rider's speed, including through bends.
-  const marker = new THREE.BufferGeometry(), outline: number[] = [];
-  for (const lane of [-0.15, 0.15]) {
-    for (const [x, z] of [[-0.11,-0.09], [0,0.02], [0,0.11], [-0.11,-0.09], [0,0.11], [-0.11,0],
-      [0,0.02], [0.11,-0.09], [0.11,0], [0,0.02], [0.11,0], [0,0.11]]) outline.push(lane + x, 0, z);
+  // Shared articulated tread: raised shoulders catch light, with an inset
+  // direction mark on every sixth link. All links travel with the rider.
+  const marker = new THREE.BufferGeometry(), outline: number[] = [], tones: number[] = [];
+  function ribbon(start: number, end: number, span: number, y: number, ink: string) {
+    shade.set(ink);
+    for (const side of [-1, 1]) {
+      const outer = side * span, sweep = span * 0.52;
+      for (const [x, z] of [[0,start],[outer,start-sweep],[outer,end-sweep],[0,start],[outer,end-sweep],[0,end]]) {
+        outline.push(x, y, z); tones.push(shade.r, shade.g, shade.b);
+      }
+    }
   }
+  ribbon(-0.035, 0.13, w * 0.71, 0, "#565452");
+  ribbon(0.078, 0.12, w * 0.67, 0.004, "#837d70");
+  ribbon(-0.005, 0.086, w * 0.31, 0.008, "#c8c2ae");
   marker.setAttribute("position", new THREE.Float32BufferAttribute(outline, 3));
-  const marks = new THREE.InstancedMesh(marker, new THREE.MeshBasicMaterial({ color: "#86b77a", side: THREE.DoubleSide }), 20);
+  marker.setAttribute("color", new THREE.Float32BufferAttribute(tones, 3));
+  const marks = new THREE.InstancedMesh(marker, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide }), 36);
+  for (let i = 0; i < marks.count; i++) marks.setColorAt(i, shade.set(i % 6 ? "#a49f96" : "#83c45d"));
   marks.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(marks);
   const pose = new THREE.Object3D();
   function paint(s: number) {

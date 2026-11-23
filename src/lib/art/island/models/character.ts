@@ -15,7 +15,7 @@ export function character(): VoxelModel {
   fill(m, (x, y, z) => {
     if (y < 12) {
       if (Math.abs(x) >= 4 || Math.abs(z) >= 2) return 0;
-      if (y < 2) return 31;
+      if (y < 2 || z < -0.5 && y === 2) return 31;
       if (Math.abs(x) > 2.5 || Math.abs(x) < 1 || z < -0.5 || y === 2) return 36;
       return z > 0.5 && (y === 5 || y === 6) ? 37 : 30;
     }
@@ -23,6 +23,8 @@ export function character(): VoxelModel {
       const body = Math.abs(x) < 4, side = body ? Math.abs(x) > 2.5 : Math.abs(x) > 6.5;
       if (!body && y < 20) return side || z < -0.5 || y === 12 ? 38 : 24;
       if (body && z > 0.5 && (y === 23 && Math.abs(x) < 2 || y === 22 && Math.abs(x) < 1)) return 24;
+      if (body && z > 0.5 && y === 12 && x >= 1.5) return 29;
+      if (!body && y === 20 && z < 0) return 34;
       if (body && z < -0.5 && y > 12 && y < 23) return Math.abs(x) > 2 || y === 21 ? 34 : 29;
       if (!body && z > 0.5 && y === 23 && !side) return 35;
       if (side || z < -0.5 || y === 12) return 34;
@@ -32,7 +34,8 @@ export function character(): VoxelModel {
       if (z > 3) return INK[FACE[31 - y][x + 3.5]];
       if (y >= 30 || z < -2 || Math.abs(x) > 2.5 && (y >= 28 || z < -0.5 && y > 25))
         return x < -1 && z > -2 && z < 2 || x > 0 && x < 3 && z < 0 && y > 28 ? 25 : 26;
-      return Math.abs(x) > 2.5 && Math.abs(z) < 1 && y === 27 ? 38 : 24;
+      if (Math.abs(x) > 2.5 && z < -0.5 && y === 25) return 26;
+      return Math.abs(x) > 2.5 && Math.abs(z) < 1 && (y === 27 || y === 26 && z < 0) ? 38 : 24;
     }
     return 0;
   });

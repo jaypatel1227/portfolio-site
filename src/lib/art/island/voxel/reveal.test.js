@@ -143,6 +143,17 @@ void it("draws exactly one complete LOD per instance without changing its materi
   assert.equal(emptyLow.visible, false); assert.equal(emptyHigh.visible, false);
 });
 
+void it("culls base instances during a bake and restores their original slots when the LOD arrives", () => {
+  const low = mesh(), high = mesh(), m = new THREE.Matrix4();
+  const originals = [0, 1].map(i => { low.getMatrixAt(i, m); return m.clone(); });
+  createLodSwap(low, null, originals)([true, true], [false, true]);
+  assert.equal(low.count, 1); low.getMatrixAt(0, m); assert.deepEqual(m, originals[1]);
+  createLodSwap(low, high, originals)([true, false], [true, true]);
+  assert.equal(low.count, 1); assert.equal(high.count, 1);
+  low.getMatrixAt(0, m); assert.deepEqual(m, originals[1]);
+  high.getMatrixAt(0, m); assert.deepEqual(m, originals[0]);
+});
+
 void it("aligns high-density ground and water surfaces with their original voxel bounds", () => {
   for (const height of [1, 7, 27]) {
     const low = new THREE.BoxGeometry(3, height, 5).translate(0, (height - 1) / 2, 0);

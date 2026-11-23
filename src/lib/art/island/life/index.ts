@@ -12,9 +12,9 @@ import { createLighting } from "./lighting";
 import { createBirds } from "./birds";
 import { createInsects } from "./insects";
 
-export function createLife(seed: number, batch: Batch, sky: THREE.Group, obstacles: Obstacle[], plants: Plants) {
+export function createLife(seed: number, batch: Batch, sky: THREE.Group, obstacles: Obstacle[], plants: Plants, frustum: THREE.Frustum) {
   const rng = random(seed + 741);
-  const systems: AnimationSystem[] = [createWind(plants), createFalling(batch, rng), createPond(batch), createWildlife(batch, rng, obstacles), createFootsteps(batch, rng), createShooting(seed, sky), createLighting(plants), createBirds(seed, batch), createInsects(batch, plants.lamps)];
+  const systems: AnimationSystem[] = [createWind(plants), createFalling(batch, rng), createPond(batch), createWildlife(batch, rng, obstacles), createFootsteps(batch, rng), createShooting(seed, sky), createLighting(plants, frustum), createBirds(seed, batch), createInsects(batch, plants.lamps)];
   return {
     setView(camera: THREE.OrthographicCamera) { for (const system of systems) system.setView?.(camera); },
     update(frame: Frame) { for (const system of systems) system.update(frame); },

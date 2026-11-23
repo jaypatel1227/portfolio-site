@@ -33,13 +33,12 @@ export function createDetails(seed: number, batch: Batch, scene: THREE.Scene, sk
     visible: Array<boolean>(source.mesh.count).fill(true),
     bounds: Array.from({ length: source.mesh.count }, (_, i) => {
       const matrix = new THREE.Matrix4(); source.mesh.getMatrixAt(i, matrix);
-      if (!source.mesh.geometry.boundingSphere) source.mesh.geometry.computeBoundingSphere();
-      const sphere = source.mesh.geometry.boundingSphere!.clone();
-      sphere.radius += 4; // Wind and water displacement, in model units.
-      return sphere.applyMatrix4(matrix);
+      if (!source.mesh.geometry.boundingBox) source.mesh.geometry.computeBoundingBox();
+      return source.mesh.geometry.boundingBox!.clone().expandByScalar(5).applyMatrix4(matrix);
     }),
     swap: null as ReturnType<typeof createLodSwap> | null,
   }));
+  for (const entry of entries) entry.swap = createLodSwap(entry.mesh, null, entry.originals);
   let scenery: ReturnType<typeof createScenery> | null = null;
   let small: ReturnType<typeof createSmallProps> | null = null;
   let scheduled = false, preloading = false, collecting = false, disposed = false, zoomed = false;
@@ -94,14 +93,13 @@ export function createDetails(seed: number, batch: Batch, scene: THREE.Scene, sk
         else setTimeout(build, 0);
       }
       for (const entry of entries) {
-        if (!entry.high) continue;
         entry.originals.forEach((matrix, i) => {
-          entry.nearby[i] = entry.kind === "ground" || lodNearby(distance(matrix), radius(entry), entry.nearby[i], DETAIL.distanceBand);
+          entry.nearby[i] = !!entry.high && (entry.kind === "ground" || lodNearby(distance(matrix), radius(entry), entry.nearby[i], DETAIL.distanceBand));
           entry.selected[i] = zoomed && entry.nearby[i];
-          entry.visible[i] = !zoomed || frustum.intersectsSphere(entry.bounds[i]);
+          entry.visible[i] = !zoomed || frustum.intersectsBox(entry.bounds[i]);
         });
         entry.swap!(entry.selected, entry.visible);
-        entry.high.position.copy(entry.mesh.position);
+        entry.high?.position.copy(entry.mesh.position);
       }
       scenery?.update(amount, time, dt, frustum);
       collection.update(amount, player, dt, time);

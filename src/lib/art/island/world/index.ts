@@ -51,14 +51,26 @@ export function createWorld(seed: number) {
   const cabinMesh = batch(cabinVoxels, [{ x: 10, z: -1, scale: 0.13, angle: -0.18 }]);
   batch(sign(), [{ x: -0.6, z: 8, scale: 0.085, angle: -0.3 }]);
   const board = model(16, 15, 3);
-  fill(board, (x, y) => Math.abs(x) > 6 || y < 2 || y > 12 ? 3 : 21);
+  fill(board, (x, y, z) => Math.abs(x) > 6 || y < 2 || y > 12 ? y === 14 ? 4 : 3 :
+    z > 0 && (y === 10 && Math.abs(x) < 4 || (y === 7 || y === 5) && x > -5 && x < 3) ? 12 : 21);
   batch(board, [{ x: NOTE.x, z: NOTE.z + 0.3, scale: 0.085, y: 1.05 }]);
 
   const shore = model(41, 5, 31);
-  fill(shore, (x, y, z) => (x / 20) ** 2 + (z / 15) ** 2 < 1 && ((x / 17) ** 2 + (z / 12) ** 2 > 1 || y < 2) ? y > 2 ? 14 : 13 : 0);
+  const waterline = (x: number, z: number) => 0.93 + 0.055 * Math.sin(x * 0.34 + z * 0.19);
+  fill(shore, (x, y, z) => {
+    if ((x / 20) ** 2 + (z / 15) ** 2 >= waterline(x, z) || y >= 2 && (x / 17) ** 2 + (z / 12) ** 2 < waterline(x, z)) return 0;
+    return y > 2 ? Math.cos(x * 0.5 + z * 0.33) > 0.48 ? 12 : 14 : 13;
+  });
   batch(shore, [{ x: -8, z: 1, scale: 0.25, y: -0.85 }]);
   const water = model(35, 2, 25);
-  fill(water, (x, y, z) => (x / 17) ** 2 + (z / 12) ** 2 < 1 ? (Math.sin(x * 0.8 + z * 0.4) > 0.92 ? 23 : 22) : 0);
+  fill(water, (x, _y, z) => {
+    const basin = (x / 17) ** 2 + (z / 12) ** 2;
+    const edge = waterline(x, z);
+    if (basin >= edge) return 0;
+    if (basin > edge - 0.15) return 23;
+    const ripple = Math.sin(z * 1.5 + 0.5 * Math.cos(x * 0.48));
+    return ripple > 0.86 && Math.cos(x * 0.4 - z) > 0.45 ? 23 : basin < 0.35 ? 13 : 22;
+  });
   const pond = batch(water, [{ x: -8, z: 1, scale: 0.25, y: -0.32 }]);
   const stones = stoneSpots(rng).filter((p) => !nearTrack(p, p.scale * 5 + 0.4) && !exhibitFootprints.some((e) => Math.hypot(p.x - e.x, p.z - e.z) < e.r + p.scale * 5));
   stones.forEach((o) => obstacles.push({ x: o.x, z: o.z, r: o.scale * 5 }));
@@ -78,7 +90,7 @@ export function createWorld(seed: number) {
   const grassMesh = batch(grass(), tufts), mushrooms = batch(mushroom(), flora);
   const grassView = createReveal([grassMesh], 13);
   const projection = new THREE.Matrix4(), frustum = new THREE.Frustum();
-  const life = createLife(seed, batch, sky, obstacles, { pines, oak, grass: grassMesh, mushrooms, flora, lamps: lanterns, pools });
+  const life = createLife(seed, batch, sky, obstacles, { pines, oak, grass: grassMesh, mushrooms, flora, lamps: lanterns, pools }, frustum);
   const details = createDetails(seed, batch, scene, sky, clearings, [
     { kind: "ground", mesh: ground, base: groundVoxels },
     { kind: "oak", mesh: oak, base: oakVoxels },

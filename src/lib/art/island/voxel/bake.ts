@@ -40,24 +40,32 @@ export function* bakeLayers(m: VoxelModel, palette: readonly string[], { topTint
   const height = Math.max(1, y + row), pixels = new Uint8Array(4 * width * height);
   x = y = row = 0;
   const sky = new THREE.Color("#98b6c5"), shade = new THREE.Color();
-  const colors = Array.from({ length: m.height }, (_, layer) => palette.map((color) => {
-    const edge = shade.set(color).multiplyScalar(layer % 3 === 0 ? 0.30 : 0.46).getHex();
-    const inside = shade.set(color).multiplyScalar(0.72 + 0.36 * layer / m.height).getHex();
-    return [edge, inside, shade.lerp(sky, topTint).getHex()];
-  }));
+  // A soft key from above/front separates planes without painting dark rings
+  // across faces, fur or glass. Bake the overhang shadows into the same atlas.
+  const light = [0.70, 0.82, 0.58, 1, 0.64, 0.92];
+  const inks = palette.map(color => new THREE.Color(color));
+  // Cache only combinations present on the shell; zero means not painted yet.
+  const colors = new Uint32Array(m.height * inks.length * 12);
   const mesh = surfaceMesh(m), uv: number[] = [], p = [0, 0, 0];
   for (let n = 0; n < faces.length; n++) {
     if (n % 128 === 0) yield;
     const f = faces[n], u = (f.d + 1) % 3, v = (f.d + 2) % 3;
     place(f);
-    const left = x - f.w;
+    const left = x - f.w, side = f.d * 2 + Number(f.sign > 0);
     for (let j = 0; j < f.h; j++) for (let i = 0; i < f.w; i++) {
       p[f.d] = f.layer; p[u] = f.i + i; p[v] = f.j + j;
       const [vx, vy, vz] = p, index = voxel(m, vx, vy, vz);
-      if (!colors[vy][index]) throw new RangeError(`Missing voxel palette index ${index}`);
-      const edge = f.d !== 1 || !voxel(m, vx - 1, vy, vz) || !voxel(m, vx + 1, vy, vz) ||
-        !voxel(m, vx, vy, vz - 1) || !voxel(m, vx, vy, vz + 1);
-      const c = colors[vy][index][edge ? 0 : voxel(m, vx, vy + 1, vz) ? 1 : 2];
+      if (index >= inks.length) throw new RangeError(`Missing voxel palette index ${index}`);
+      const overhang = f.d !== 1 && voxel(m, vx + (f.d === 0 ? f.sign : 0), vy + 1, vz + (f.d === 2 ? f.sign : 0));
+      const key = ((vy * inks.length + index) * 6 + side) * 2 + Number(!!overhang);
+      if (!colors[key]) {
+        shade.copy(inks[index]).multiplyScalar(light[side] * (0.88 + 0.18 * vy / m.height));
+        if (side === 3) shade.lerp(sky, topTint * 0.55);
+        else if (vy % 3 === 0) shade.multiplyScalar(0.95);
+        if (overhang) shade.multiplyScalar(0.72);
+        colors[key] = shade.getHex() + 1;
+      }
+      const c = colors[key] - 1;
       const k = ((y + j) * width + left + i) * 4;
       pixels[k] = c >> 16; pixels[k + 1] = c >> 8; pixels[k + 2] = c; pixels[k + 3] = 255;
     }

@@ -14,8 +14,8 @@ interface Exhibit extends Obstacle {
 const exhibits: Exhibit[] = [
   { make: orrery, r: 1.86, x: -4.6, z: 13.6, scale: 0.038 },
   { make: bonfire, r: 0.56, x: 8.1, z: -6, scale: 0.043 },
-  { make: plasmaBlade, r: 0.72, x: 8.4, z: 6.4, scale: 0.034, angle: 0.35 },
-  { make: teleporter, r: 0.94, x: -11.3, z: -4.5, scale: 0.041 },
+  { make: plasmaBlade, r: 0.72, x: 7.2, z: 6.6, scale: 0.034, angle: 0.35 },
+  { make: teleporter, r: 1.12, x: -11.3, z: -4.5, scale: 0.041 },
   { make: cardFan, accent: jokerCard, r: 1.3, x: -5.2, z: 7.6, scale: 0.036, angle: 0.4 },
   { make: obol, r: 0.22, x: -10.1, z: 3.1, scale: 0.03, y: 0.066 },
   { make: fieldKit, r: 0.48, x: 11.65, z: 2.0, scale: 0.033, angle: 0.45 },
